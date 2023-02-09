@@ -4,8 +4,9 @@
 
 import { useRef, useState, useEffect, forwardRef, memo } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { Grid, Center, AccumulativeShadows, RandomizedLight, Environment, useGLTF, CameraControls, ContactShadows, OrbitControls } from '@react-three/drei'
+import { Grid, Center, AccumulativeShadows, RandomizedLight, Environment, useGLTF, CameraControls, ContactShadows, OrbitControls, PresentationControls } from '@react-three/drei'
 import { useControls, button, buttonGroup, folder } from 'leva'
+import { useSpring, a } from '@react-spring/three'
 
 import { HexColorPicker } from 'react-colorful'
 import { proxy, useSnapshot } from 'valtio'
@@ -101,34 +102,32 @@ export default function App() {
 	return (
 		<>
 			<Canvas style={{ height: '100vh' }} shadows camera={{ position: [0, 0, 5], fov: 60 }}>
-				<Scene />
-				{/* <Shoe /> */}
+				<PresentationControls snap global zoom={0.8} rotation={[0, -Math.PI / 4, 0]} polar={[0, Math.PI / 4]} azimuth={[-Math.PI / 4, Math.PI / 4]}>
+					<Scene />
+					{/* <Shoe /> */}
+				</PresentationControls>
 			</Canvas>
 			<Picker />
 		</>
 	)
 }
 
-// function Scene() {
-// 	return (
-// 		<>
-// 			<ambientLight intensity={0.7} />
-// 			<spotLight intensity={0.5} angle={0.1} penumbra={1} position={[10, 15, 10]} castShadow />
-// 			<Shoe />
-// 			<Environment preset='city' />
-// 			<ContactShadows position={[0.1, -0.8, 0]} opacity={0.25} scale={10} blur={1.5} far={0.8} />
-// 			<OrbitControls minPolarAngle={Math.PI / 2} maxPolarAngle={Math.PI / 2} enableZoom={false} enablePan={false} />
-// 		</>
-// 	)
-// }
 function Scene() {
-	const meshRef = useRef()
+	// const meshRef = useRef()
 	const cameraControlsRef = useRef()
-
 	const { camera } = useThree()
+	const [sceneViewMode, setSceneViewMode] = useState('Restricted')
 
 	// All same options as the original "basic" example: https://yomotsu.github.io/camera-controls/examples/basic.html
 	const { minDistance, enabled, verticalDragToForward, dollyToCursor, infinityDolly } = useControls({
+		viewMode: buttonGroup({
+			label: 'ViewMode',
+			opts: {
+				r: () => setSceneViewMode('restricted'),
+				o: () => setSceneViewMode('orbit'),
+				p: () => setSceneViewMode('p')
+			}
+		}),
 		thetaGrp: buttonGroup({
 			label: 'rotate theta',
 			opts: {
@@ -224,12 +223,12 @@ function Scene() {
 				{/* <Center top> */}
 				{/* <Suzi ref={meshRef} rotation={[-0.63, 0, 0]} /> */}
 				<group position-y={0.5}>
-					<Shoe ref={meshRef} />
+					<Shoe />
 				</group>
 				{/* </Center> */}
 				<Ground />
 				<Shadows />
-				<CameraControls ref={cameraControlsRef} minDistance={minDistance} enabled={enabled} verticalDragToForward={verticalDragToForward} dollyToCursor={dollyToCursor} infinityDolly={infinityDolly} />
+				{sceneViewMode == 'orbit' ? <CameraControls ref={cameraControlsRef} minDistance={minDistance} enabled={enabled} verticalDragToForward={verticalDragToForward} dollyToCursor={dollyToCursor} infinityDolly={infinityDolly} /> : null}
 				<Environment preset='city' />
 			</group>
 		</>
