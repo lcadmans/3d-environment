@@ -10,15 +10,19 @@
 		"build": "vite build --base=./",
 		"preview": "vite preview",
 		"predeploy": "npm run build",
-		"deploy": "gh-pages -d dist"
+		"deploy": "gh-pages -d dist -t true"
 	},
 	"dependencies": {
 		"@react-three/drei": "^9.56.18",
 		"@react-three/fiber": "^8.11.0",
 		"@types/three": "^0.149.0",
+		"camera-controls": "^2.1.0",
+		"leva": "^0.9.34",
 		"react": "^18.2.0",
+		"react-colorful": "^5.6.1",
 		"react-dom": "^18.2.0",
-		"three": "^0.149.0"
+		"three": "^0.149.0",
+		"valtio": "^1.10.1"
 	},
 	"devDependencies": {
 		"@types/react": "^18.0.27",
