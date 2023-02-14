@@ -8,6 +8,8 @@ import { Grid, Center, AccumulativeShadows, RandomizedLight, Environment, useGLT
 import { useControls, button, buttonGroup, folder } from 'leva'
 import { useSpring, a } from '@react-spring/three'
 
+import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader'
+
 import { HexColorPicker } from 'react-colorful'
 import { proxy, useSnapshot } from 'valtio'
 
@@ -99,10 +101,116 @@ function Picker() {
 	)
 }
 
+const svgResource = new Promise(resolve =>
+	// const loader = new SVGLoader()
+	new SVGLoader().load('./circle.svg', shapes => {
+		resolve(
+			flatten(
+				shapes.paths.map((group, index) => {
+					return group.toShapes(true).map(shape => {
+						const fillColor = group.userData.style.fill
+						return { shape, color: fillColor, index }
+					})
+				})
+			)
+		)
+	})
+)
+
+function loadSvg() {
+	const svgMeshRef = useRef()
+	const svgGroupRef = useRef()
+	const [svgData, setSvgData] = useState({})
+	const [testData, setTestData] = useState({})
+
+	const loader = new SVGLoader()
+
+	let geometries = []
+
+	geometries.push('test')
+
+	let data = loader.load('./circle.svg', function (data) {
+		// loader.load('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/models/svg/tiger.svg', function (data) {
+		const paths = data.paths
+
+		// const group = new THREE.Group()
+
+		// svgGroupRef.current.scale.multiplyScalar(0.25)
+		// svgGroupRef.current.position.x = -70
+		// svgGroupRef.current.position.y = 70
+		// svgGroupRef.current.scale.y *= -1
+
+		let guiData = {}
+		guiData.drawFillShapes = true
+		guiData.drawStrokes = true
+
+		// console.log(paths)
+		for (let i = 0; i < paths.length; i++) {
+			const path = paths[i]
+			// console.log(path)
+			const fillColor = path.userData.style.fill
+			if (guiData.drawFillShapes && fillColor !== undefined && fillColor !== 'none') {
+				const material = new THREE.MeshBasicMaterial({
+					color: new THREE.Color().setStyle(fillColor).convertSRGBToLinear(),
+					opacity: path.userData.style.fillOpacity,
+					transparent: true,
+					side: THREE.DoubleSide,
+					depthWrite: false
+					// wireframe: guiData.fillShapesWireframe
+				})
+				const shapes = SVGLoader.createShapes(path)
+				for (let j = 0; j < shapes.length; j++) {
+					const shape = shapes[j]
+					// 	setSvgData({ geometry: new THREE.ShapeGeometry(shape), material: material })
+					// meshes.push({ shape: shape, material: material })
+
+					const geometry = new THREE.ShapeGeometry(shape)
+					console.log(geometry)
+					// setGeometries([...geometries, geometry])
+					geometries.push('test2')
+					// console.log(geometries)
+					// const mesh = new THREE.Mesh(geometry, material)
+				}
+			}
+			const strokeColor = path.userData.style.stroke
+			if (guiData.drawStrokes && strokeColor !== undefined && strokeColor !== 'none') {
+				const material = new THREE.MeshBasicMaterial({
+					color: new THREE.Color().setStyle(strokeColor).convertSRGBToLinear(),
+					opacity: path.userData.style.strokeOpacity,
+					transparent: true,
+					side: THREE.DoubleSide,
+					depthWrite: false
+					// wireframe: guiData.strokesWireframe
+				})
+				for (let j = 0, jl = path.subPaths.length; j < jl; j++) {
+					const subPath = path.subPaths[j]
+					const geometry = SVGLoader.pointsToStroke(subPath.getPoints(), path.userData.style)
+					if (geometry) {
+						// console.log(geometry)
+						// geometries.push('test2')
+						// geometries.push(geometry)
+						// console.log(geometry)
+						// setSvgData({ geometry: geometry, material: material })
+					}
+				}
+			}
+		}
+	})
+}
+
 export default function Mesh() {
+	let geometries = loadSvg()
+	console.log(geometries)
+
 	return (
 		<>
 			<Canvas style={{ height: '100vh' }} shadows camera={{ position: [0, 0, 5], fov: 60 }}>
+				{/* <group ref={svgGroupRef}> */}
+				{/* <Sphere></Sphere> */}
+				{/* <mesh ref={svgMeshRef} position={[0, 0, 0]} geometry={svgData.geometry}> */}
+
+				{/* </mesh> */}
+				{/* </group> */}
 				{/* <OrbitControls global zoom={0.8} rotation={[0, -Math.PI / 4, 0]} polar={[0, Math.PI / 4]} azimuth={[-Math.PI / 4, Math.PI / 4]}> */}
 				<PresentationControls global zoom={0.8} rotation={[0, -Math.PI / 4, 0]} polar={[0, Math.PI / 4]} azimuth={[-Math.PI / 4, Math.PI / 4]}>
 					<Scene />
@@ -122,31 +230,20 @@ export default function Mesh() {
 // 	}, [count])
 
 // 	return (
-// 		<Trail
-// 			width={1}
-// 			length={4}
-// 			color={'#F8D628'}
-// 			attenuation={t => {
-// 				return t * t
-// 			}}
-// 		>
 // 			<points>
 // 				<bufferGeometry>
 // 					<bufferAttribute attach={'attributes-position'} {...points} />
 // 				</bufferGeometry>
 // 				<pointsMaterial size={0.1} threshold={0.1} color={0xff00ff} sizeAttenuation={true} />
 // 			</points>
-// 		</Trail>
 // 	)
 // }
 function BufferPoints() {
 	let points = [
 		[-1.0, 0.0, 0.0],
+		[0.0, 1.0, 0.0],
 		[1.0, 0.0, 0.0],
-		[0.5408577919006348, -0.8380453586578369, 0.16345912218093872],
-		[-0.0030298233032226562, -0.8978477716445923, 1.1139686107635498],
-		[0.6506198048591614, 0.46440255641937256, 1.0185199975967407],
-		[0.9651488661766052, 0.38549768924713135, 0.3767693042755127]
+		[0.0, -1.0, 0.0]
 	]
 	let scale = 1
 
@@ -156,8 +253,12 @@ function BufferPoints() {
 		var z = points[i][2] * scale
 		points[i] = new THREE.Vector3(x, z, -y)
 	}
+	console.log(points)
 
-	var curvePath = new THREE.CatmullRomCurve3(points)
+	// var curvePath = new THREE.CatmullRomCurve3(points)
+	var curvePath = new THREE.CubicBezierCurve3(...points)
+	// var curvePath = new THREE.QuadraticBezierCurve3(...points)
+
 	var radius = 0.25
 
 	//========== Create a tube geometry that represents our curve
@@ -179,7 +280,14 @@ function BufferPoints() {
 
 	return (
 		<>
-			<mesh geometry={geometry} material={material}></mesh>
+			{points.map(a => {
+				return (
+					<Sphere args={[0.1, 32, 32]} position={a}>
+						<meshNormalMaterial />
+					</Sphere>
+				)
+			})}
+			{/* <mesh geometry={geometry} material={material}></mesh> */}
 			{/* <mesh>
 				<bufferGeometry>
 					<bufferAttribute attach='attributes-position' array={positions} count={positions.length / 3} itemSize={3} />
@@ -194,6 +302,43 @@ function BufferPoints() {
 }
 
 function Scene() {
+	// loader.load(
+	// 	// resource URL
+	// 	'./circle.svg',
+	// 	// called when the resource is loaded
+	// 	function (data) {
+	// 		// creating mesh object, adding to scene, and starting loop
+	// 		console.log(data)
+	// 		// mesh = SVGMove.createMesh(data, 'box1')
+	// 		// scene.add(mesh)
+	// 		// loop()
+	// 	},
+	// 	// called when loading is in progresses
+	// 	function (xhr) {
+	// 		console.log((xhr.loaded / xhr.total) * 100 + '% loaded')
+	// 	},
+	// 	// called when loading has errors
+	// 	function (error) {
+	// 		console.log('An error happened')
+	// 		console.log(error)
+	// 	}
+	// )
+
+	// const svgResource = new Promise(resolve =>
+	// 	new loader().load('./circle.svg', shapes => {
+	// 		resolve(
+	// 			flatten(
+	// 				shapes.paths.map((group, index) => {
+	// 					return group.toShapes(true).map(shape => {
+	// 						const fillColor = group.userData.style.fill
+	// 						return { shape, color: fillColor, index }
+	// 					})
+	// 				})
+	// 			)
+	// 		)
+	// 	})
+	// )
+
 	const cameraControlsRef = useRef()
 	const meshRef = useRef()
 	const sphere = useRef()
@@ -202,7 +347,7 @@ function Scene() {
 	const [sceneViewMode, setSceneViewMode] = useState('Restricted')
 	useFrame(({ clock }) => {
 		const t = clock.getElapsedTime()
-		group.current.rotation.z = t
+		// group.current.rotation.z = t
 		sphere.current.position.x = Math.sin(t * 2) * 2
 		sphere.current.position.z = Math.cos(t * 2) * 2
 	})
@@ -214,7 +359,7 @@ function Scene() {
 			<group position-y={-1}>
 				<group position-y={0.5}>{/* <Shoe /> */}</group>
 				<group ref={group}>
-					<BufferPoints />
+					{/* <BufferPoints /> */}
 
 					<Trail
 						width={1}
