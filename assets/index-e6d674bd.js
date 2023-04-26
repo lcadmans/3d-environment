@@ -3798,7 +3798,7 @@ outputColor=vec4(color,inputColor.a);}`,mj=class extends $r{constructor({blendFu
  * LICENSE file in the root directory of this source tree.
  */var of=P;function Rj(n,e){return n===e&&(n!==0||1/n===1/e)||n!==n&&e!==e}var Bj=typeof Object.is=="function"?Object.is:Rj,Pj=of.useState,Dj=of.useEffect,Ij=of.useLayoutEffect,Lj=of.useDebugValue;function Oj(n,e){var t=e(),i=Pj({inst:{value:t,getSnapshot:e}}),r=i[0].inst,s=i[1];return Ij(function(){r.value=t,r.getSnapshot=e,Z_(r)&&s({inst:r})},[n,t,e]),Dj(function(){return Z_(r)&&s({inst:r}),n(function(){Z_(r)&&s({inst:r})})},[n]),Lj(t),t}function Z_(n){var e=n.getSnapshot;n=n.value;try{var t=e();return!Bj(n,t)}catch{return!0}}function Fj(n,e){return e()}var kj=typeof window>"u"||typeof window.document>"u"||typeof window.document.createElement>"u"?Fj:Oj;oI.useSyncExternalStore=of.useSyncExternalStore!==void 0?of.useSyncExternalStore:kj;(function(n){n.exports=oI})(Tj);const Uj=`
 void main() {
-  gl_FragColor = vec4(0.455,0.498,0.718, 1.0);
+  gl_FragColor = vec4(0.878,0.71,0.373, 1.0);
 }
 `,Nj=`
 uniform float uTime;
