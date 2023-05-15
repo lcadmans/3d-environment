@@ -1,269 +1,338 @@
-// import React, { useRef, useState } from 'react'
-// import { Canvas, useFrame } from '@react-three/fiber'
-// import { Model } from './Models/Model'
+import { CameraControls, Environment, PerspectiveCamera, Stars, useScroll } from '@react-three/drei'
+import { Bloom, EffectComposer, Noise, Scanline, Vignette } from '@react-three/postprocessing'
 
-import { useRef, useState, useEffect, forwardRef, memo } from 'react'
-import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { Grid, Center, AccumulativeShadows, RandomizedLight, Environment, useGLTF, CameraControls, ContactShadows, OrbitControls, PresentationControls } from '@react-three/drei'
-import { useControls, button, buttonGroup, folder } from 'leva'
-import { useSpring, a } from '@react-spring/three'
+import { Canvas, useThree, useFrame } from '@react-three/fiber'
+import { BlendFunction, KernelSize, Resizer } from 'postprocessing'
+import React, { useEffect, useRef, useState } from 'react'
 
-import { HexColorPicker } from 'react-colorful'
-import { proxy, useSnapshot } from 'valtio'
+import { Lights } from './components'
 
 import * as THREE from 'three'
 
-const { DEG2RAD } = THREE.MathUtils
+import { cameraPositionsStore } from './data/positions'
 
-import './styles/global.css'
+import { Euler, Vector3 } from 'three'
+import { HirecoUniverse } from './components'
+import { appState } from './store/store'
 
-const state = proxy({
-	current: null,
-	items: {
-		laces: '#ffffff',
-		mesh: '#ffffff',
-		caps: '#ffffff',
-		inner: '#ffffff',
-		sole: '#ffffff',
-		stripes: '#ffffff',
-		band: '#ffffff',
-		patch: '#ffffff'
-	}
-})
+import { baseCameraPositions } from './data'
 
-function Shoe(props) {
-	const ref = useRef()
-	const snap = useSnapshot(state)
-	const { nodes, materials } = useGLTF('cam_shoe_v1.glb')
-	const [hovered, set] = useState(null)
-
-	useFrame(state => {
-		const t = state.clock.getElapsedTime()
-		ref.current.rotation.set(Math.cos(t / 4) / 8, Math.sin(t / 4) / 8, -0.2 - (1 + Math.sin(t / 1.5)) / 20)
-		ref.current.position.y = (1 + Math.sin(t / 1.5)) / 10
-	})
-
-	useEffect(() => {
-		const cursor = `<svg width="64" height="64" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0)"><path fill="rgba(255, 255, 255, 0.5)" d="M29.5 54C43.031 54 54 43.031 54 29.5S43.031 5 29.5 5 5 15.969 5 29.5 15.969 54 29.5 54z" stroke="#000"/><g filter="url(#filter0_d)"><path d="M29.5 47C39.165 47 47 39.165 47 29.5S39.165 12 29.5 12 12 19.835 12 29.5 19.835 47 29.5 47z" fill="${snap.items[hovered]}"/></g><path d="M2 2l11 2.947L4.947 13 2 2z" fill="#000"/><text fill="#000" style="white-space:pre" font-family="Inter var, sans-serif" font-size="10" letter-spacing="-.01em"><tspan x="35" y="63">${hovered}</tspan></text></g><defs><clipPath id="clip0"><path fill="#fff" d="M0 0h64v64H0z"/></clipPath><filter id="filter0_d" x="6" y="8" width="47" height="47" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feColorMatrix in="SourceAlpha" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"/><feOffset dy="2"/><feGaussianBlur stdDeviation="3"/><feColorMatrix values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.15 0"/><feBlend in2="BackgroundImageFix" result="effect1_dropShadow"/><feBlend in="SourceGraphic" in2="effect1_dropShadow" result="shape"/></filter></defs></svg>`
-		const auto = `<svg width="64" height="64" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill="rgba(255, 255, 255, 0.5)" d="M29.5 54C43.031 54 54 43.031 54 29.5S43.031 5 29.5 5 5 15.969 5 29.5 15.969 54 29.5 54z" stroke="#000"/><path d="M2 2l11 2.947L4.947 13 2 2z" fill="#000"/></svg>`
-		if (hovered) {
-			document.body.style.cursor = `url('data:image/svg+xml;base64,${btoa(cursor)}'), auto`
-			return () => (document.body.style.cursor = `url('data:image/svg+xml;base64,${btoa(auto)}'), auto`)
-		}
-	}, [hovered])
-
+const ArrowSvg = ({ direction = 'back', fill = '#f5f5f5' }) => {
 	return (
-		// <group ref={ref} onPointerOver={e => (e.stopPropagation(), set(e.object.material.name))} onPointerOut={e => e.intersections.length === 0 && set(null)} onPointerMissed={() => (state.current = null)} onClick={e => (e.stopPropagation(), (state.current = e.object.material.name))}>
-		// 	<mesh receiveShadow castShadow geometry={nodes.shoe.geometry} material={materials.laces} material-color={snap.items.laces} />
-		// 	<mesh receiveShadow castShadow geometry={nodes.shoe_1.geometry} material={materials.mesh} material-color={snap.items.mesh} />
-		// 	<mesh receiveShadow castShadow geometry={nodes.shoe_2.geometry} material={materials.caps} material-color={snap.items.caps} />
-		// 	<mesh receiveShadow castShadow geometry={nodes.shoe_3.geometry} material={materials.inner} material-color={snap.items.inner} />
-		// 	<mesh receiveShadow castShadow geometry={nodes.shoe_4.geometry} material={materials.sole} material-color={snap.items.sole} />
-		// 	<mesh receiveShadow castShadow geometry={nodes.shoe_5.geometry} material={materials.stripes} material-color={snap.items.stripes} />
-		// 	<mesh receiveShadow castShadow geometry={nodes.shoe_6.geometry} material={materials.band} material-color={snap.items.band} />
-		// 	<mesh receiveShadow castShadow geometry={nodes.shoe_7.geometry} material={materials.patch} material-color={snap.items.patch} />
-		// </group>
-		<group
-			{...props}
-			// dispose={null}
-			ref={ref}
-			// onPointerOver={e => (e.stopPropagation(), set(e.object.material.name))}
-			// onPointerOut={e => e.intersections.length === 0 && set(null)}
-			// onPointerMissed={() => (state.current = null)}
-			// onClick={e => (e.stopPropagation(), (state.current = e.object.material.name))}
-			// position={[0, 5, 0]}
+		<svg
+			className={`
+    ${direction == 'forward' ? 'transform rotate-180' : ''}
+    `}
+			xmlns='http://www.w3.org/2000/svg'
+			width={25.045}
+			height={10.116}
 		>
-			<group scale={0.1} rotation={[0.7, -1, 0.3]}>
-				<mesh castShadow receiveShadow geometry={nodes.Baked_UA_HOVR_Backlace_v001.geometry} material={materials['WHITE MATTE']} position={[0, 3.58, -4.1]} rotation={[1.92, 0, 0]} />
-				<mesh castShadow receiveShadow geometry={nodes.Baked_UA_HOVR_Heelsupport_v001.geometry} material={materials['WHITE MATTE']} position={[0, 3.58, -4.1]} rotation={[1.92, 0, 0]} />
-				<mesh castShadow receiveShadow geometry={nodes.Baked_UA_HOVR_Insole_v001.geometry} material={materials['Default OBJ.002']} position={[0, 3.58, -4.1]} rotation={[1.92, 0, 0]} />
-				<mesh castShadow receiveShadow geometry={nodes.Baked_UA_HOVR_Lacerestraint_v001.geometry} material={materials['WHITE MATTE']} position={[0, 3.58, -4.1]} rotation={[1.92, 0, 0]} />
-				<mesh castShadow receiveShadow geometry={nodes.Baked_UA_HOVR_Laces_v001.geometry} material={materials['WHITE MATTE']} position={[0, 3.58, -4.1]} rotation={[1.92, 0, 0]} />
-				<mesh castShadow receiveShadow geometry={nodes.Baked_UA_HOVR_Sole_v001.geometry} material={materials['WHITE MATTE']} position={[0, 3.58, -4.1]} rotation={[1.92, 0, 0]} />
-				<mesh castShadow receiveShadow geometry={nodes.Baked_UA_HOVR_Stitches_v001.geometry} material={materials['WHITE MATTE']} position={[0, 3.58, -4.1]} rotation={[1.92, 0, 0]} />
-				<mesh castShadow receiveShadow geometry={nodes.Baked_UA_HOVR_Tag_v001.geometry} material={materials['WHITE MATTE']} position={[0, 3.58, -4.1]} rotation={[1.92, 0, 0]} />
-				<mesh castShadow receiveShadow geometry={nodes.Baked_UA_HOVR_Upper_v001.geometry} material={materials['WHITE MATTE']} position={[0, 3.58, -4.1]} rotation={[1.92, 0, 0]} />
-			</group>
-		</group>
+			<defs>
+				<clipPath id='a'>
+					<path data-name='Rectangle 1' fill={fill} d='M0 0h25.045v10.116H0z' />
+				</clipPath>
+			</defs>
+			<g data-name='Group 2'>
+				<g data-name='Group 1' clipPath='url(#a)'>
+					<path data-name='Path 1' d='M25.045 6.19H6.476v3.931L0 5.057 6.473 0v3.928h18.574Z' fill={fill} />
+				</g>
+			</g>
+		</svg>
 	)
 }
 
-function Picker() {
-	const snap = useSnapshot(state)
+const FocusPanel = position => {
+	const activeSlide = appState(state => state.activeSlide)
+	const selectSlide = appState(state => state.setActiveSlide)
+	function handleOpacity() {
+		if (activeSlide === 0) {
+			return 'hidden pointer-events-none'
+		} else {
+			return 'opacity-100'
+		}
+	}
+	function handleSide(side) {
+		if (side == 'left') {
+			return ''
+		} else {
+			return 'flex justify-end'
+		}
+	}
+
+	let side = 'left'
+	if (activeSlide == 4 || activeSlide == 2 || activeSlide == 1) side = 'right'
+
+	let titleText = { 5: { title: 'WELFARE', subTitle: 'ENVIRONMENT + PARK' }, 4: { title: 'TECHNOLOGY', subTitle: 'SMART + ASSET' }, 3: { title: 'SUPPORT', subTitle: 'MAINTAIN + FINANCE' }, 2: { title: 'SOURCE', subTitle: 'ASSETS + FINANCE' }, 1: { title: 'EXPERTS', subTitle: 'THE TEAM' } }
+	let activeIndex = activeSlide
+
+	let title = ''
+	let subTitle = ''
+
+	if (activeSlide) title = titleText[activeIndex].title
+	if (activeSlide) subTitle = titleText[activeIndex].subTitle
+
 	return (
-		<div style={{ display: snap.current ? 'block' : 'none' }}>
-			<HexColorPicker className='picker' color={snap.items[snap.current]} onChange={color => (state.items[snap.current] = color)} />
-			<h1>{snap.current}</h1>
+		<div
+			className={`wrap absolute z-40 h-screen  items-center pl-10 pr-10 
+    ${side == 'left' ? 'grad-left' : 'grad-right'}
+      flex 
+     ${handleOpacity()}
+    `}
+		>
+			<div className={`relative ${handleSide(side)}`}>
+				<div className='content text-white w-2/5'>
+					<div
+						className='back flex items-center pb-6 cursor-pointer'
+						onClick={() => {
+							if (activeSlide != 0) selectSlide(0)
+						}}
+					>
+						<ArrowSvg />
+						<span className='pl-2 uppercase font-bold tracking-wider'>Back</span>
+					</div>
+					<h2 className='text-[90px] font-extrabold'>{title}</h2>
+					<h2 className='text-4xl pt-0'>{subTitle}</h2>
+					<p className='w-full text-base font-light'>
+						Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate
+						velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+					</p>
+					<div
+						className='read-more flex items-center pb-6 cursor-pointer pt-20'
+						onClick={() => {
+							if (activeSlide != 0) selectSlide(0)
+						}}
+					>
+						<span className='pl-2 uppercase font-bold tracking-wider pr-2 text-[#d19a41]'>Read More</span>
+						<ArrowSvg direction={'forward'} fill={'#d19a41'} />
+					</div>
+				</div>
+			</div>
 		</div>
 	)
 }
 
-export default function App() {
+function App() {
+	const [loaded, setLoaded] = useState(false)
+
+	const activeRing = appState(state => state.activeRing)
+	const setActiveRing = appState(state => state.setActiveRing)
 	return (
 		<>
-			<Canvas style={{ height: '100vh' }} shadows camera={{ position: [0, 0, 5], fov: 60 }}>
-				<PresentationControls snap global zoom={0.8} rotation={[0, -Math.PI / 4, 0]} polar={[0, Math.PI / 4]} azimuth={[-Math.PI / 4, Math.PI / 4]}>
-					<Scene />
-					{/* <Shoe /> */}
-				</PresentationControls>
+			<FocusPanel></FocusPanel>
+			{activeRing != 'none' ? (
+				<div className={`wrap absolute z-40 h-screen  items-center pl-10 pr-10 grad-left flex `}>
+					{/* <div className={`relative ${handleSide(side)}`}> */}
+					<div className='content text-white w-2/5'>
+						<div
+							className='back flex items-center pb-6 cursor-pointer'
+							onClick={() => {
+								setActiveRing('none')
+							}}
+						>
+							<ArrowSvg />
+							<span className='pl-2 uppercase font-bold tracking-wider'>Back</span>
+						</div>
+
+						<div
+							className='read-more flex items-center pb-6 cursor-pointer pt-20'
+							onClick={() => {
+								setActiveRing('pageSection')
+							}}
+						>
+							<span className='pl-2 uppercase font-bold tracking-wider pr-2 text-[#d19a41]'>Read More</span>
+							<ArrowSvg direction={'forward'} fill={'#d19a41'} />
+						</div>
+					</div>
+					{/* </div> */}
+				</div>
+			) : (
+				<></>
+			)}
+			<Canvas className='relative' style={{ height: '100vh' }} shadows gl={{ alpha: false }} onCreated={() => {}}>
+				<mesh>
+					<sphereGeometry args={[0.1, 64, 64]} />
+					<meshBasicMaterial side={THREE.BackSide} />
+				</mesh>
+				<HirecoUniverse />
+				<Environment files='./environment/nedula.hdr' background={true} blur={0.1} rotation={5} />
+				<ambientLight intensity={0.1} />
+				<Lights />
+				<directionalLight position={[0, 0, 5]} color='red' />
+				<color attach='background' args={['#191920']} opacity={1} />
+				<fog attach='fog' args={['#000000', 0.6, 1.8]} />
+				<Scene></Scene>
 			</Canvas>
-			<Picker />
 		</>
 	)
 }
 
-function Scene() {
-	// const meshRef = useRef()
-	const cameraControlsRef = useRef()
-	const { camera } = useThree()
-	const [sceneViewMode, setSceneViewMode] = useState('Restricted')
+const Scene = () => {
+	const DEG2RAD = degrees => degrees * (Math.PI / 180)
 
-	// All same options as the original "basic" example: https://yomotsu.github.io/camera-controls/examples/basic.html
-	const { minDistance, enabled, verticalDragToForward, dollyToCursor, infinityDolly } = useControls({
-		viewMode: buttonGroup({
-			label: 'ViewMode',
-			opts: {
-				r: () => setSceneViewMode('restricted'),
-				o: () => setSceneViewMode('orbit'),
-				p: () => setSceneViewMode('p')
-			}
-		}),
-		thetaGrp: buttonGroup({
-			label: 'rotate theta',
-			opts: {
-				'+45º': () => cameraControlsRef.current?.rotate(45 * DEG2RAD, 0, true),
-				'-90º': () => cameraControlsRef.current?.rotate(-90 * DEG2RAD, 0, true),
-				'+360º': () => cameraControlsRef.current?.rotate(360 * DEG2RAD, 0, true)
-			}
-		}),
-		phiGrp: buttonGroup({
-			label: 'rotate phi',
-			opts: {
-				'+20º': () => cameraControlsRef.current?.rotate(0, 20 * DEG2RAD, true),
-				'-40º': () => cameraControlsRef.current?.rotate(0, -40 * DEG2RAD, true)
-			}
-		}),
-		truckGrp: buttonGroup({
-			label: 'truck',
-			opts: {
-				'(1,0)': () => cameraControlsRef.current?.truck(1, 0, true),
-				'(0,1)': () => cameraControlsRef.current?.truck(0, 1, true),
-				'(-1,-1)': () => cameraControlsRef.current?.truck(-1, -1, true)
-			}
-		}),
-		dollyGrp: buttonGroup({
-			label: 'dolly',
-			opts: {
-				1: () => cameraControlsRef.current?.dolly(1, true),
-				'-1': () => cameraControlsRef.current?.dolly(-1, true)
-			}
-		}),
-		zoomGrp: buttonGroup({
-			label: 'zoom',
-			opts: {
-				'/2': () => cameraControlsRef.current?.zoom(camera.zoom / 2, true),
-				'/-2': () => cameraControlsRef.current?.zoom(-camera.zoom / 2, true)
-			}
-		}),
-		minDistance: { value: 0 },
-		moveTo: folder(
-			{
-				vec1: { value: [3, 5, 2], label: 'vec' },
-				'moveTo(…vec)': button(get => cameraControlsRef.current?.moveTo(...get('moveTo.vec1'), true))
-			},
-			{ collapsed: true }
-		),
-		'fitToBox(mesh)': button(() => cameraControlsRef.current?.fitToBox(meshRef.current, true)),
-		setPosition: folder(
-			{
-				vec2: { value: [-5, 2, 1], label: 'vec' },
-				'setPosition(…vec)': button(get => cameraControlsRef.current?.setPosition(...get('setPosition.vec2'), true))
-			},
-			{ collapsed: true }
-		),
-		setTarget: folder(
-			{
-				vec3: { value: [3, 0, -3], label: 'vec' },
-				'setTarget(…vec)': button(get => cameraControlsRef.current?.setTarget(...get('setTarget.vec3'), true))
-			},
-			{ collapsed: true }
-		),
-		setLookAt: folder(
-			{
-				vec4: { value: [1, 2, 3], label: 'position' },
-				vec5: { value: [1, 1, 0], label: 'target' },
-				'setLookAt(…position, …target)': button(get => cameraControlsRef.current?.setLookAt(...get('setLookAt.vec4'), ...get('setLookAt.vec5'), true))
-			},
-			{ collapsed: true }
-		),
-		lerpLookAt: folder(
-			{
-				vec6: { value: [-2, 0, 0], label: 'posA' },
-				vec7: { value: [1, 1, 0], label: 'tgtA' },
-				vec8: { value: [0, 2, 5], label: 'posB' },
-				vec9: { value: [-1, 0, 0], label: 'tgtB' },
-				t: { value: Math.random(), label: 't', min: 0, max: 1 },
-				'f(…posA,…tgtA,…posB,…tgtB,t)': button(get => {
-					return cameraControlsRef.current?.lerpLookAt(...get('lerpLookAt.vec6'), ...get('lerpLookAt.vec7'), ...get('lerpLookAt.vec8'), ...get('lerpLookAt.vec9'), get('lerpLookAt.t'), true)
-				})
-			},
-			{ collapsed: true }
-		),
-		saveState: button(() => cameraControlsRef.current?.saveState()),
-		reset: button(() => cameraControlsRef.current?.reset(true)),
-		enabled: { value: true, label: 'controls on' },
-		verticalDragToForward: { value: false, label: 'vert. drag to move forward' },
-		dollyToCursor: { value: false, label: 'dolly to cursor' },
-		infinityDolly: { value: false, label: 'infinity dolly' }
+	const cameraControlsRef = useRef()
+	const cameraRef = useRef()
+	const [aspects, setAspects] = useState([0.15, 0.1])
+	const [cameraFov, setCameraFov] = useState(75)
+
+	const [cameraPositions, setCameraPositions] = useState(baseCameraPositions)
+
+	const activeSlide = appState(state => state.activeSlide)
+	const activeRing = appState(state => state.activeRing)
+
+	const returnToCameraOrigin = () => {
+		cameraControlsRef.current?.setTarget(cameraPositions[0].target.x, cameraPositions[0].target.y, cameraPositions[0].target.z, true)
+		cameraControlsRef.current?.setPosition(cameraPositions[0].position.x, cameraPositions[0].position.y, cameraPositions[0].position.z, true)
+	}
+
+	function updateCameraPosition() {
+		if (activeRing == 'none') return null
+		if (!cameraControlsRef.current) return null
+		cameraControlsRef.current?.setTarget(cameraPositionsStore.focus[activeRing].target.x, cameraPositionsStore.focus[activeRing].target.y, cameraPositionsStore.focus[activeRing].target.z, true)
+		cameraControlsRef.current?.setPosition(cameraPositionsStore.focus[activeRing].position.x, cameraPositionsStore.focus[activeRing].position.y, cameraPositionsStore.focus[activeRing].position.z, true)
+		// cameraControlsRef.current?.rotation(cameraPositionsStore.focus[activeSlide].rotation._x, cameraPositionsStore.focus[1].rotation._y, cameraPositionsStore.focus[1].rotation._z, true)
+	}
+
+	useEffect(() => {
+		if (activeRing == 'none') return returnToCameraOrigin()
+		updateCameraPosition()
+	}, [activeRing])
+
+	useEffect(() => {
+		// cameraRef.current.lookAt(0, 0, 0)
+	}, [])
+
+	useFrame(state => {
+		const { camera } = state
+		const t = state.clock.getElapsedTime()
+		const { x, y, z } = activeCameraSettings.position
+		cameraControlsRef.current.setLookAt(x, y, z, 0, 0, 0)
+		// camera.lookAt(0, 100, 0)
+		// camera.position.x = t / 100
+		// camera.rot/ation.x = t / 100
+		// camera.position.x += 0.1
+		// camera.position.z = target.position.z + radius * Math.sin(constant * elapsedTime)
+		// camera.lookAt(target.position)
 	})
 
-	return (
-		<>
-			<group position-y={-1}>
-				{/* <Center top> */}
-				{/* <Suzi ref={meshRef} rotation={[-0.63, 0, 0]} /> */}
-				<group position-y={0.5}>
-					<Shoe />
-				</group>
-				{/* </Center> */}
-				<Ground />
-				<Shadows />
-				{sceneViewMode == 'orbit' ? <CameraControls ref={cameraControlsRef} minDistance={minDistance} enabled={enabled} verticalDragToForward={verticalDragToForward} dollyToCursor={dollyToCursor} infinityDolly={infinityDolly} /> : null}
-				<Environment preset='city' />
-			</group>
-		</>
-	)
-}
+	const [activeCameraSettings, setActiveCameraSettings] = useState({
+		target: { x: cameraPositions[0].target.x, y: cameraPositions[0].target.y, z: cameraPositions[0].target.z },
+		position: { x: cameraPositions[0].position.x, y: cameraPositions[0].position.y, z: cameraPositions[0].position.z },
+		rotation: { x: cameraPositions[0].rotation._x, y: cameraPositions[0].rotation._y, z: cameraPositions[0].rotation._z }
+	})
 
-function Ground() {
-	const gridConfig = {
-		cellSize: 0.5,
-		cellThickness: 0.5,
-		cellColor: '#6f6f6f',
-		sectionSize: 3,
-		sectionThickness: 1,
-		sectionColor: '#9d4b4b',
-		fadeDistance: 30,
-		fadeStrength: 1,
-		followCamera: false,
-		infiniteGrid: true
+	function updateActiveCameraSettings(position, rotation, quaternion, target) {
+		position = new Vector3(position.x, position.y, position.z, true)
+		rotation = new Euler(rotation._x, rotation._y, rotation._z, rotation._order)
+		// cameraControlsRef.current?.setPosition(position.x, position.y, position.z)
+		// cameraControlsRef.current?.setrotation(rotation._x, rotation._y, rotation._z)
+		setActiveCameraSettings({ position: position, rotation: rotation, quaternion: quaternion, target: target })
 	}
-	return <Grid position={[0, -0.01, 0]} args={[10.5, 10.5]} {...gridConfig} />
-}
 
-const Shadows = memo(() => (
-	<AccumulativeShadows temporal frames={100} color='#9d4b4b' colorBlend={0.5} alphaTest={0.9} scale={20}>
-		<RandomizedLight amount={8} radius={4} position={[5, 5, -10]} />
-	</AccumulativeShadows>
-))
+	let obj = {}
+	cameraPositions.forEach(
+		(a, i) =>
+			(obj[i] = () => {
+				cameraControlsRef.current?.setTarget(cameraPositions[i].target.x, cameraPositions[i].target.y, cameraPositions[i].target.z, true)
+				cameraControlsRef.current?.setPosition(cameraPositions[i].position.x, cameraPositions[i].position.y, cameraPositions[i].position.z, true)
+				// cameraControlsRef.current?.setPosition(cameraPositions[i].position.x, cameraPositions[i].position.y, cameraPositions[i].position.z, true)
+				// cameraControlsRef.current?.rotation(cameraPositions[i].rotation._x, cameraPositions[i].rotation._y, cameraPositions[i].rotation._z, true)
+				// cameraControlsRef.current?.rotation(cameraPositions[i].rotation._x, cameraPositions[i].rotation._y, cameraPositions[i].rotation._z, true)
+				// const cameraQuanternion = new Quaternion(cameraPositions[i].quaternion._x, cameraPositions[i].quaternion._y, cameraPositions[i].quaternion._z, cameraPositions[i].quaternion._w)
+			})
+	)
 
-const Suzi = forwardRef((props, ref) => {
-	const { nodes } = useGLTF('https://market-assets.fra1.cdn.digitaloceanspaces.com/market-assets/models/suzanne-high-poly/model.gltf')
+	let cameraPositionStoreObj = {}
+	Object.keys(cameraPositionsStore.focus).forEach(
+		(a, i) =>
+			(cameraPositionStoreObj[i] = () => {
+				cameraControlsRef.current?.setTarget(cameraPositionsStore.focus[a].target.x, cameraPositionsStore.focus[a].target.y, cameraPositionsStore.focus[a].target.z, true)
+				cameraControlsRef.current?.setPosition(cameraPositionsStore.focus[a].position.x, cameraPositionsStore.focus[a].position.y, cameraPositionsStore.focus[a].position.z, true)
+				// cameraControlsRef.current?.rotation(cameraPositionsStore.focus[a].rotation._x, cameraPositionsStore.focus[a].rotation._y, cameraPositionsStore.focus[a].rotation._z, true)
+				// updateActiveCameraSettings(cameraPositionsStore.focus[a].position, cameraPositionsStore.focus[a].rotation, cameraPositionsStore.focus[a].quaternion, cameraPositionsStore.focus[a].target)
+			})
+	)
+
+	const [cameraPositionOpts, setCameraPositionOpts] = useState(obj)
+	const { camera } = useThree()
+
+	function getCameraInformation(e) {
+		let cameraInformation = {}
+		// console.log(cameraControlsRef.current)
+		cameraInformation.position = cameraControlsRef.current._camera.position.clone()
+		cameraInformation.rotation = cameraControlsRef.current._camera.rotation.clone()
+		cameraInformation.quaternion = cameraControlsRef.current._camera.quaternion.clone()
+		cameraInformation.target = cameraControlsRef.current._target.clone()
+		console.log(cameraInformation)
+	}
+
 	return (
 		<>
-			<mesh ref={ref} castShadow receiveShadow geometry={nodes.Suzanne.geometry} {...props}>
-				<meshStandardMaterial color='#9d4b4b' />
-			</mesh>
+			<>
+				{/* <PresentationControls snap global zoom={0.8} rotation={[0, -Math.PI / 4, 0]} polar={[0, Math.PI / 4]} azimuth={[-Math.PI / 4, Math.PI / 4]}> */}
+				{/* <PresentationControls snap global zoom={2} rotation={[0, -Math.PI / 5, 0]} polar={[0, Math.PI / 10]} azimuth={[-Math.PI / 2, Math.PI / 2]} speed={-1}> */}
+				<CameraControls
+					ref={cameraControlsRef}
+					onEnd={e => getCameraInformation(e)}
+					// camera={cameraRef}
+					// quaternion={[-1, 5, 0, 0]}
+					makedefault
+					// target={vector3}
+					// rotation={cameraPositions[0].rotation}
+					// position={cameraPositions[0].position}
+					// quaternion={cameraPositions[0].quaternion}
+				/>
+				<PerspectiveCamera
+					ref={cameraRef}
+					makeDefault
+					manual
+					aspect={aspects[0] / aspects[1]}
+					fov={cameraFov}
+					// position={Object.values(cameraPositions[0].position)}
+					near={0.01}
+					// lookAt={[1, 1, 1]}
+
+					// rotation={Object.values(cameraPositions[0].rotation)}
+				/>
+				{/* </PresentationControls> */}
+				<Environment files='./environment/nedula_bright.hdr' blur={0.1}></Environment>
+
+				<EffectComposer>
+					<Bloom
+						intensity={1}
+						luminanceThreshold={1}
+						luminanceSmoothing={0.025}
+						width={Resizer.AUTO_SIZE} // render width
+						height={Resizer.AUTO_SIZE}
+						kernelSize={KernelSize.LARGE}
+						blurPass={undefined}
+						mipmapBlur={false}
+					/>
+					<Vignette
+						eskil={false}
+						offset={0.5}
+						darkness={0.7}
+						// blendFunction={'add'}
+					/>
+					<Noise opacity={0.075} />
+					<Scanline
+						blendFunction={BlendFunction.OVERLAY} // blend mode
+						density={0.6} // scanline density
+						opacity={0.025} // scanline opacity
+					/>
+					{/* <SSAO samples={25} intensity={20} luminanceInfluence={0.5} radius={0.2} scale={0.5} bias={0.5} />
+						<SMAA edgeDetectionMode={EdgeDetectionMode.DEPTH} /> */}
+				</EffectComposer>
+
+				<Stars />
+			</>
 		</>
 	)
-})
+}
+export default App
+
+{
+	/* <Suspense fallback={<Fallback />}> */
+}
+{
+	/* <orthographicCamera ref={cameraRef} makedefault attach='shadow-camera' left={-90} right={20} top={20} bottom={-20} /> */
+}
