@@ -137,6 +137,18 @@
 
 export const cameraPositionsStore = {
 	focus: {
+		none: {
+			position: {
+				x: 0.39827128845574944,
+				y: 0.34516304304660034,
+				z: 0.7791881275473871
+			},
+			target: {
+				x: 0,
+				y: 0,
+				z: 0
+			}
+		},
 		ring_2: {
 			position: {
 				x: 0.30482562914629735,

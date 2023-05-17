@@ -206,6 +206,73 @@ function Page(props) {
 	)
 }
 
+function GenerateMaterial(props) {
+	const { pageActive, activeOpacity, activeBackOpacity, nextPage, prevPage } = props
+	return (
+		<>
+			<animated.meshBasicMaterial attachArray='material' opacity={activeOpacity} side={THREE.FrontSide} blending={THREE.AdditiveBlending} />
+			{/* {pageActive || nextPage ? (
+				<>
+					<animated.meshBasicMaterial attachArray='material' opacity={activeOpacity} side={THREE.FrontSide} blending={THREE.AdditiveBlending} />
+				</>
+			) : (
+				<>
+					<animated.meshBasicMaterial attachArray='material' opacity={activeBackOpacity} side={THREE.BackSide} blending={THREE.AdditiveBlending} />
+				</>
+			)} */}
+		</>
+	)
+}
+
+// function IntroPage(props) {
+// 	const { title, description } = props
+// 	return (
+// 		<>
+// 			<group>
+// 				<Text font={'./fonts/Eveleth Clean Regular.otf'} anchorX='left' anchorY='middle' position={[0, 0.025, 0]} fontSize={0.05} outlineOffsetX={0} outlineOffsetY={0} outlineBlur={0.0575} color={'#ffffff'}>
+// 					{title}
+// 				</Text>
+// 			</group>
+// 			<group>
+// 				<Text font={'./fonts/Eveleth Clean Thin.otf'} anchorX='left' anchorY='middle' position={[0, -0.025, 0]} fontSize={0.02} outlineOffsetX={0} outlineOffsetY={0} outlineBlur={0.01} color={'#eda666'}>
+// 					{description}
+// 				</Text>
+// 			</group>
+// 		</>
+// 	)
+// }
+
+// function OutroPage(props) {
+// 	const { title, description } = props
+// 	return (
+// 		<>
+// 			<group>
+// 				<Text font={'./fonts/Eveleth Clean Regular.otf'} anchorX='left' anchorY='middle' position={[0, 0.025, 0]} fontSize={0.05} outlineOffsetX={0} outlineOffsetY={0} outlineBlur={0.0575} color={'#ffffff'}>
+// 					{title}
+// 				</Text>
+// 			</group>
+// 			<group>
+// 				<Text font={'./fonts/Eveleth Clean Thin.otf'} anchorX='left' anchorY='middle' position={[0, -0.025, 0]} fontSize={0.02} outlineOffsetX={0} outlineOffsetY={0} outlineBlur={0.01} color={'#eda666'}>
+// 					{description}
+// 				</Text>
+// 			</group>
+// 		</>
+// 	)
+// }
+
+const Texture = ({ texture }) => {
+	return (
+		<mesh>
+			<planeBufferGeometry attach='geometry' args={[5, 4]} transparrent opacity={0} />
+			<meshBasicMaterial attach='material' map={texture} />
+		</mesh>
+	)
+}
+const ImageComponent = ({ url }) => {
+	const texture = useMemo(() => new THREE.TextureLoader().load(url), [url])
+	return <Texture texture={texture} />
+}
+
 function fetchMidPoints(circlePoints) {
 	let arr = []
 	circlePoints.forEach((a, index) => {

@@ -5,12 +5,32 @@ import { useGLTF } from '@react-three/drei'
 
 import * as THREE from 'three'
 
+const ringNames = { ring_2: 'Experts', ring_3: 'Source', ring_4: 'Technology', ring_5: 'Support', ring_6: 'Welfare' }
+const pageCopy = {
+	Experts: {
+		subTitle: 'Test',
+		content: [
+			{ image: '1.jpg', title: 'Title', subtitle: 'subtitle', description: 'description', cta: 'google.com' },
+			{ image: '2.jpg', title: 'Title', subtitle: 'subtitle', description: 'description', cta: 'google.com' },
+			{ image: '3.jpg', title: 'Title', subtitle: 'subtitle', description: 'description', cta: 'google.com' },
+			{ image: '4.jpg', title: 'Title', subtitle: 'subtitle', description: 'description', cta: 'google.com' },
+			{ image: '5.jpg', title: 'Title', subtitle: 'subtitle', description: 'description', cta: 'google.com' },
+			{ image: '1.jpg', title: 'Title', subtitle: 'subtitle', description: 'description', cta: 'google.com' },
+			{ image: '1.jpg', title: 'Title', subtitle: 'subtitle', description: 'description', cta: 'google.com' },
+			{ image: '2.jpg', title: 'Title', subtitle: 'subtitle', description: 'description', cta: 'google.com' },
+			{ image: '3.jpg', title: 'Title', subtitle: 'subtitle', description: 'description', cta: 'google.com' },
+			{ image: '4.jpg', title: 'Title', subtitle: 'subtitle', description: 'description', cta: 'google.com' }
+		]
+	}
+}
+
 export const appState = create(
 	devtools(set => ({
 		// States
 		started: false,
 		activeSlide: 0,
 		// activeRing: 'pageSection',
+		// activeRing: 'ring_2',
 		activeRing: 'none',
 		focusRing: 'none',
 		numPages: 4,
@@ -49,8 +69,14 @@ export const appState = create(
 		setDimensions: input => set(state => ({ dimensions: input })),
 		setScrollControlsInitiated: input => set(state => ({ scrollControlsInitiated: input })),
 
+		// Content
+		ringNames: ringNames,
+		// sectionCopy: pageCopy,
+		sectionContent: input => pageCopy[input],
+
 		// functions
-		generateCirclePoints: (radius, segments, yElevation) => generateCirclePoints(radius, segments, yElevation)
+		generateCirclePoints: (radius, segments, yElevation) => generateCirclePoints(radius, segments, yElevation),
+		getUniverseStores: () => getUniverseStores()
 	}))
 )
 
@@ -67,6 +93,31 @@ function generateCirclePoints(radius, segments, yElevation = 0) {
 	return points
 }
 
-const pageCopy = {
-	expers: {}
+// Unvierse Stores from Zustand State Management
+const getUniverseStores = () => {
+	let colorValues = []
+	let baseValues = [0.831, 0.25, 0.007]
+	for (let i = 0; i < 15; i++) {
+		let row = []
+		row.push(baseValues[0] * i)
+		row.push(baseValues[1] * i)
+		row.push(baseValues[2] * i)
+		colorValues.push(row)
+	}
+	const universeMultipliers = {}
+
+	const fectchSectionPositions = () => {
+		const { nodes, materials } = useGLTF('./models/hireco_3DScene_sectLocation-v1.glb')
+		let sectPositions = {}
+		Object.keys(nodes).forEach(a => {
+			let b = nodes[a]
+			if (b.type == 'Mesh') sectPositions[b.name] = b.position
+		})
+		return sectPositions
+	}
+	const sectionPositions = fectchSectionPositions()
+
+	return { colorValues, universeMultipliers, sectionPositions }
 }
+
+useGLTF.preload('./models/hireco_3DScene_sectLocation-v1.glb')

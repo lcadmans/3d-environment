@@ -6,7 +6,7 @@ import { BlendFunction, KernelSize, Resizer } from 'postprocessing'
 import { animated, a, update } from '@react-spring/three'
 import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import useRefs from 'react-use-refs'
-import { Lights, HirecoUniverse, ConsoleLogger, ScrollPages, FocusPanel, CustomLoader } from './components'
+import { Lights, HirecoUniverse, ConsoleLogger, ScrollPages, FocusPanel, CustomLoader, ContentHolder } from './components'
 import { appState } from './store'
 import { resolveAfterSmoothTime, asyncCall } from './functions'
 import { baseCameraPositions, cameraPositionsStore } from './data'
@@ -23,7 +23,7 @@ function getSnapshot() {
 }
 
 function App() {
-	const activeRing = appState(state => state.activeRing)
+	const activeRing = appState(state => state.activeRing, shallow)
 	const setActiveRing = appState(state => state.setActiveRing)
 	const setIsAnimating = appState(state => state.setIsAnimating)
 	const numPages = appState(state => state.numPages)
@@ -45,7 +45,6 @@ function App() {
 	// 	setDimensions(getSnapshot())
 	// 	// console.log(dimensions)
 	// }
-
 	// updateDimensionsState()
 
 	let content = {
@@ -60,55 +59,14 @@ function App() {
 		<>
 			{/* <FocusPanel></FocusPanel> */}
 			{/* <DragPanel></DragPanel> */}
-			{activeRing != 'none' ? (
-				<div className={`wrap absolute z-40 h-screen  items-center pl-10 pr-10 grad-left flex pointer-events-none max-w-sm`}>
-					<div className='content text-white '>
-						<div
-							className='back pb-6 pointer-events-auto cursor-pointer'
-							onClick={() => {
-								setActiveRing('none')
-								setCurrentView('main')
-								returnCameraToOrigin()
-								setScrollControlsInitiated(false)
-							}}
-						>
-							<span className='uppercase font-bold tracking-wider'>Back</span>
-						</div>
-						{/* {currentView == 'page' ? (
-							<>
-								<div className='w-1/2'>
-									<p>{content[activePage]}</p>
-								</div>
-							</>
-						) : (
-							<></>
-						)} */}
-
-						<div className='flex pt-6'>
-							<div
-								className='read-more  pointer-events-auto cursor-pointer'
-								onClick={() => {
-									setActiveRing('pageSection')
-									setCurrentView('page')
-									setIsAnimating(true)
-								}}
-							>
-								<span className='uppercase font-bold tracking-wider pr-2 text-[#d19a41]'>Read More</span>
-							</div>
-						</div>
-					</div>
-					{/* </div> */}
-				</div>
-			) : (
-				<></>
-			)}
+			{activeRing != 'none' ? <ContentOverlay returnCameraToOrigin={returnCameraToOrigin} /> : <></>}
 			{/* <CustomLoader /> */}
 			<Loader />
 			<ConsoleLogger />
 			<Suspense>
 				<Canvas
 					onCreated={state => {
-						state.setEvents({ filter: intersections => intersections.filter(i => i.object.visible) })
+						// state.setEvents({ filter: intersections => intersections.filter(i => i.object.visible) })
 					}}
 					className='relative'
 					style={{ height: '100vh' }}
@@ -123,67 +81,20 @@ function App() {
 					<Lights />
 					<directionalLight position={[0, 0, 5]} color='red' />
 					<color attach='background' args={['#191920']} opacity={1} />
-
 					{/* <fog attach='fog' args={['#000000', 0.6, 1.8]} /> */}
 					<fog attach='fog' args={['#000000', 1.2, 2.1]} />
-
-					<Scene></Scene>
+					<_Scene></_Scene>
 				</Canvas>
 			</Suspense>
 		</>
 	)
 }
 
-function Scene() {
-	const floatGroup = useRef()
-	const numPages = appState(state => state.numPages)
-	const dimensions = appState(state => state.dimensions, shallow)
-
-	useFrame(state => {
-		const t = state.clock.getElapsedTime()
-		floatGroup.current.rotation.set(Math.cos(t / 8) / 8, Math.sin(t / 8) / 16, -0.2 - Math.sin(t / 3) / 30)
-	})
-
-	const scrollCotnrolsRef = useRef()
-
-	return (
-		<group ref={floatGroup}>
-			<HirecoUniverse />
-			<ScrollControls
-				ref={scrollCotnrolsRef}
-				pages={numPages}
-				distance={1.5}
-				// horizontal={true}
-				// damping={0.25}
-				// maxSpeed={0.3}
-			>
-				<Scroll html>
-					{/* <div className='absolute z-50 w-full h-full bg-black'></div> */}
-					{/* DOM contents in here will scroll along */}
-					{/* <h1 className='z-50 text-white'>html in here (optional)</h1>
-          
-							<h1 style={{ top: '100vh' }}>second page</h1>
-            <h1 style={{ top: '200vh' }}>third page</h1> */}
-					{/* <div className='w-full h-[100vh]'></div>
-					<div className='w-full h-full opacity-75 ml-48'>
-						<p className='top-full relative text-white z-50 w-1/3'>
-							Sam et quae. Temporeriori rem quis utenti omnihiliqui as exceatem qui solora consequides est qui se con plabor si tenimusanis molorporibus autem estiaerum fuga. Occus sitatur? Qui odiciis aut qui que lant perum que mos voluption cum ium etur, ipsum laciam con nos amus, sum quam plabor
-						</p>
-						<br />
-						<p className='top-full relative text-white z-50 w-1/3'>si tenimusanis molorporibus autem estiaerum fuga. Occus sitatur Lorem ipsum dolor et sium. • Curtiansiders • Skeletal • Fridge • Box Contact Chris for a chat or to book a meeting using the calendar below:</p>
-					</div> */}
-				</Scroll>
-				<group>
-					<_Scene></_Scene>
-				</group>
-			</ScrollControls>
-		</group>
-	)
-}
-
 const _Scene = props => {
 	const cameraControlsRef = useRef()
 	const cameraRef = useRef()
+
+	const { progress } = useProgress()
 
 	const [aspects, setAspects] = useState([0.15, 0.1])
 	const [cameraFov, setCameraFov] = useState(75)
@@ -194,20 +105,12 @@ const _Scene = props => {
 	const scroll = useScroll()
 
 	const [cameraPositions, setCameraPositions] = useState(baseCameraPositions)
-	const [activeCameraSettings, setActiveCameraSettings] = useState({
-		target: { x: cameraPositions[0].target.x, y: cameraPositions[0].target.y, z: cameraPositions[0].target.z },
-		position: { x: cameraPositions[0].position.x, y: cameraPositions[0].position.y, z: cameraPositions[0].position.z }
-	})
-
 	const activeRing = appState(state => state.activeRing)
 	const numPages = appState(state => state.numPages)
 	const isAnimating = appState(state => state.isAnimating)
 	const setIsAnimating = appState(state => state.setIsAnimating)
 	const currentView = appState(state => state.currentView)
-	const activePage = appState(state => state.activePage)
-	const setActivePage = appState(state => state.setActivePage)
-	const activePageNumber = appState(state => state.activePageNumber)
-	const setActivePageNumber = appState(state => state.setActivePageNumber)
+
 	const cameraRefInfo = appState(state => state.cameraRefInfo)
 	const setCameraRefInfo = appState(state => state.setCameraRefInfo)
 	const activeCameraAnchor = appState(state => state.activeCameraAnchor)
@@ -220,26 +123,37 @@ const _Scene = props => {
 	const dimensions = appState(state => state.dimensions, shallow)
 	const scrollControlsInitiated = appState(state => state.scrollControlsInitiated, shallow)
 	const setScrollControlsInitiated = appState(state => state.setScrollControlsInitiated)
+	const setReturnCameraToOrigin = appState(state => state.setReturnCameraToOrigin)
 
-	useEffect(() => {
-		// console.log('dimensions')
-		// console.log(dimensions)
-	}, [dimensions])
+	const getUniverseStores = appState(state => state.getUniverseStores)
+	const { sectionPositions } = getUniverseStores()
+	console.log(sectionPositions)
 
-	// const [cameraOrbitPoints, setCameraOrbitPoints] = useState(generateCirclePoints(1, 6, 0.2))
-
-	function updateCameraPosition() {
+	function updateCameraPosition(props) {
+		const { cameraControlsRef, cameraPositionsStore, activeRing } = props
 		if (activeRing == 'none') return null
 		if (!cameraControlsRef.current) return null
-
 		let [initialPositionX, initialPositionY, initialPositionZ] = [cameraControlsRef.current._camera.position.x, cameraControlsRef.current._camera.position.y, cameraControlsRef.current._camera.position.z]
 		let { x: initialTargetX, y: initialTargetY, z: initialTargetZ } = cameraControlsRef.current?.getTarget()
 		let [endPositionX, endPositionY, endPositionZ] = [cameraPositionsStore.focus[activeRing].position.x, cameraPositionsStore.focus[activeRing].position.y, cameraPositionsStore.focus[activeRing].position.z]
-		let [endTargetX, endTargetY, endTargetZ] = [cameraPositionsStore.focus[activeRing].target.x, cameraPositionsStore.focus[activeRing].target.y, cameraPositionsStore.focus[activeRing].target.z]
-		cameraControlsRef.current?.lerpLookAt(initialPositionX, initialPositionY, initialPositionZ, initialTargetX, initialTargetY, initialTargetZ, endPositionX, endPositionY, endPositionZ, endTargetX, endTargetY, endTargetZ, 0.9, true)
+
+		if (currentView == 'page') {
+			;('pageTarget')
+			let { x: endTargetX, y: endTargetY, z: endTargetZ } = sectionPositions[activeRing]
+			console.log(endTargetX)
+			cameraControlsRef.current?.lerpLookAt(initialPositionX, initialPositionY, initialPositionZ, initialTargetX, initialTargetY, initialTargetZ, endPositionX, endPositionY, endPositionZ, endTargetX, endTargetY, endTargetZ, 0.9, true)
+		} else {
+			let [endTargetX, endTargetY, endTargetZ] = [cameraPositionsStore.focus[activeRing].target.x, cameraPositionsStore.focus[activeRing].target.y, cameraPositionsStore.focus[activeRing].target.z]
+			cameraControlsRef.current?.lerpLookAt(initialPositionX, initialPositionY, initialPositionZ, initialTargetX, initialTargetY, initialTargetZ, endPositionX, endPositionY, endPositionZ, endTargetX, endTargetY, endTargetZ, 0.9, true)
+		}
 	}
 
-	const returnToCameraOrigin = () => {
+	// useEffect(() => {
+	// 	updateCameraPosition({ cameraControlsRef, cameraPositionsStore, activeRing })
+	// }, [])
+
+	const returnToCameraOrigin = props => {
+		const { cameraControlsRef, cameraPositions } = props
 		let [initialPositionX, initialPositionY, initialPositionZ] = [cameraControlsRef.current._camera.position.x, cameraControlsRef.current._camera.position.y, cameraControlsRef.current._camera.position.z]
 		let { x: initialTargetX, y: initialTargetY, z: initialTargetZ } = cameraControlsRef.current?.getTarget()
 		let [endPositionX, endPositionY, endPositionZ] = [cameraPositions[0].position.x, cameraPositions[0].position.y, cameraPositions[0].position.z]
@@ -248,49 +162,27 @@ const _Scene = props => {
 		cameraControlsRef.current?.lerpLookAt(initialPositionX, initialPositionY, initialPositionZ, initialTargetX, initialTargetY, initialTargetZ, endPositionX, endPositionY, endPositionZ, endTargetX, endTargetY, endTargetZ, 1, true)
 	}
 
-	const setReturnCameraToOrigin = appState(state => state.setReturnCameraToOrigin)
-
-	// useEffect(() => {
-	// 	// setReturnCameraToOrigin(returnToCameraOrigin)
-	// }, [])
-
 	useEffect(() => {
 		if (!cameraControlsRef) return null
 
 		if (currentView == 'page') {
-			// console.log('page')
 		}
-		if (activeRing.includes('ring') && currentView == 'focus') {
-			updateCameraPosition()
+		if ((activeRing.includes('ring') && currentView == 'focus') || currentView == 'page') {
+			updateCameraPosition({ cameraControlsRef, cameraPositionsStore, activeRing })
 		} else if (activeRing == 'none') {
-			setScrollControlsActive(false)
-			returnToCameraOrigin()
+			returnToCameraOrigin({ cameraControlsRef, cameraPositions })
 		}
-	}, [activeRing])
+	}, [activeRing, currentView])
 
-	useEffect(() => {
-		if (currentView == 'page') {
-			let [initialPositionX, initialPositionY, initialPositionZ] = [cameraControlsRef.current._camera.position.x, cameraControlsRef.current._camera.position.y, cameraControlsRef.current._camera.position.z]
-			let { x: initialTargetX, y: initialTargetY, z: initialTargetZ } = cameraControlsRef.current?.getTarget()
-			let [endPositionX, endPositionY, endPositionZ] = [cameraOrbitPoints[1].x, cameraOrbitPoints[1].y, cameraOrbitPoints[1].z]
-			let [endTargetX, endTargetY, endTargetZ] = [0, 0, 0]
-			// cameraControlsRef.current?.setLookAt(initialPositionX, initialPositionY, initialPositionZ, initialTargetX, initialTargetY, initialTargetZ, endPositionX, endPositionY, endPositionZ, endTargetX, endTargetY, endTargetZ, 1, true)
-			cameraControlsRef.current?.setLookAt(endPositionX, endPositionY, endPositionZ, endTargetX, 0.2, endTargetZ, 1, true)
-			asyncCall(smoothTime + 10).then(() => {
-				setScrollControlsActive(true)
-			})
-		} else {
-			setScrollControlsActive(false)
-			setScrollControlsInitiated(false)
-		}
-	}, [currentView])
+	// useEffect(() => {
+	// 	console.log('defaultCamera')
+	// 	updateCameraPosition({ cameraControlsRef, cameraPositionsStore, activeRing })
+	// }, [cameraControlsRef])
 
 	useFrame(state => {
 		const { camera } = state
-		const delta = scroll.delta
-
-		if (cameraControlsRef.current._hasRested && isAnimating) setIsAnimating(false)
-		if (currentView == 'page') updateScrollControls({ scroll, state, delta, scrollControlsActive, camera, activePageNumber })
+		// if (currentView == 'page') cameraControlsRef.current?.setTarget()
+		// const delta = scroll.delta
 	})
 
 	function getCameraInformation(e) {
@@ -300,117 +192,43 @@ const _Scene = props => {
 		console.log(cameraInformation)
 	}
 
-	const scrollPagesRef = useRef()
-
-	function updateScrollControls(props) {
-		let { scroll, state, delta, scrollControlsActive, camera, activePageNumber } = props
-		// console.log(scroll)
-
-		if (!scrollControlsActive) return null
-		if (!scroll) return null
-
-		// console.log(camera)
-		// console.log(cameraControlsRef.current?._hasRested)
-
-		let x, y, z
-		// console.log(scrollControlsInitiated)
-		if (scrollControlsInitiated === false) {
-			x = cameraOrbitPoints[1].x
-			y = cameraOrbitPoints[1].y
-			z = cameraOrbitPoints[1].z
-			// cameraControlsRef.current?.setPosition(x, y, z, true)
-			scroll.offset = 0
-			scroll.el.scrollTo({ top: 0 })
-			setScrollControlsInitiated(true)
-		}
-
-		let activeSlide, activePageString, _activePageNumber
-
-		let totalHeight = dimensions.height * numPages
-		activeSlide = Math.floor(scroll.offset * numPages + 1)
-		activePageString = 'page' + activeSlide
-		let globalMultiplier = scroll.offset * numPages - activeSlide + 1
-
-		if (forcePageUpdate) {
-			console.log('activeSlide')
-			console.log(activeSlide)
-			let numPagesNegativeOne = numPages - 1
-			scroll.el.scrollTo({ top: (totalHeight / numPagesNegativeOne) * activePageNumber })
-			// scroll.offset = (totalHeight / numPages) * activePageNumber
-			setActivePage('page' + activeSlide)
-			setForcePageUpdate(false)
-			return null
-		}
-
-		let xDiff = cameraOrbitPoints[activeSlide + 1].x - cameraOrbitPoints[activeSlide].x
-		let yDiff = cameraOrbitPoints[activeSlide + 1].y - cameraOrbitPoints[activeSlide].y
-		let zDiff = cameraOrbitPoints[activeSlide + 1].z - cameraOrbitPoints[activeSlide].z
-
-		if (activeCameraAnchor != cameraOrbitPoints[activeSlide]) setActiveCameraAnchor(cameraOrbitPoints[activeSlide])
-
-		activePageString = 'page' + activeSlide
-
-		let xMultiplyAmount = xDiff * globalMultiplier
-		let yMultiplyAmount = yDiff * globalMultiplier
-		let zMultiplyAmount = zDiff * globalMultiplier
-
-		// console.log(cameraControlsRef.current._camera.position.x)
-
-		x = THREE.MathUtils.damp(cameraControlsRef.current._camera.position.x, cameraOrbitPoints[activeSlide].x + xMultiplyAmount, 20, delta)
-		y = THREE.MathUtils.damp(cameraControlsRef.current._camera.position.y, cameraOrbitPoints[activeSlide].y + yMultiplyAmount, 20, delta)
-		z = THREE.MathUtils.damp(cameraControlsRef.current._camera.position.z, cameraOrbitPoints[activeSlide].z + zMultiplyAmount, 20, delta)
-
-		if (activePageString != activePage) {
-			setActivePage(activePageString)
-		}
-		if (scrollControlsInitiated === false && currentView == 'page') return setScrollControlsInitiated(true)
-		else if (currentView != 'page') return setScrollControlsInitiated(false)
-		if (scrollControlsActive === true && forcePageUpdate == false) {
-			// cameraControlsRef.current?.lerpLookAt(0, 0, 0, 0, 0, 0, cameraOrbitPoints[activeSlide + 1].x, cameraOrbitPoints[activeSlide + 1].y, cameraOrbitPoints[activeSlide + 1].z, cameraOrbitPoints[activeSlide + 2].x, cameraOrbitPoints[activeSlide + 2].y, cameraOrbitPoints[activeSlide + 2].y, 1, true)
-			// cameraControlsRef.current?.setTarget(cameraOrbitPoints[activeSlide + 2].x, cameraOrbitPoints[activeSlide + 2].y, cameraOrbitPoints[activeSlide + 2].z, false)
-			cameraControlsRef.current?.setPosition(x, y, z, false)
-			cameraControlsRef.current?.setTarget(0, 0.2, 0, false)
-		}
-	}
-
-	useEffect(() => {
-		// console.log('cameraControlsRef')
-		// console.log(cameraControlsRef)
-	}, [cameraControlsRef])
-
 	return (
 		<>
 			<>
-				{cameraOrbitPoints &&
+				{/* {cameraOrbitPoints &&
 					cameraOrbitPoints.map(a => {
-						// console.log(a)
-						// a = a.multiplyScalar(1.1)
 						return (
 							<>
-								{/* <Sphere args={[0.02, 10, 10]} position={a}>
+								<Sphere args={[0.02, 10, 10]} position={a}>
 									<meshNormalMaterial />
-								</Sphere> */}
+								</Sphere>
 							</>
 						)
-					})}
+					})} */}
 				<CameraControls
 					ref={cameraControlsRef}
 					enableZoom={false}
 					mouseButtons={cameraControlsMouseButtons}
-					// onStart={e => {
-					// 	// console.log(cameraControlsRef)
-					// 	// console.log('start')
+					// onEnd={e => {
+					// 	getCameraInformation(e)
 					// }}
-					onEnd={e => {
-						getCameraInformation(e)
-					}}
 					makedefault
 					smoothTime={smoothTime}
 					camera={cameraRef.current}
 				/>
-				<PerspectiveCamera ref={cameraRef} makeDefault manual aspect={aspects[0] / aspects[1]} fov={cameraFov} position={Object.values(cameraPositions[0].position)} near={0.01} />
+				<PerspectiveCamera
+					ref={cameraRef}
+					makeDefault
+					manual
+					aspect={aspects[0] / aspects[1]}
+					fov={cameraFov}
+					// position={Object.values(cameraPositions[0].position)}
+					position={Object.values(cameraPositionsStore.focus[activeRing].position)}
+					// position={[0, 0, 0.1]}
+					near={0.01}
+				/>
 				<Environment files='./environment/nedula_bright.hdr' blur={0.1}></Environment>
-				<ScrollPages ref={scrollPagesRef} scrollProgress={0} groupProps={currentView != 'page' ? { visible: false } : {}} />
+				<Scene></Scene>
 				<EffectComposer>
 					<Bloom
 						intensity={2}
@@ -443,4 +261,74 @@ const _Scene = props => {
 	)
 }
 
+function Scene() {
+	const floatGroup = useRef()
+	const currentView = appState(state => state.currentView)
+
+	useFrame(state => {
+		const { camera } = state
+		const t = state.clock.getElapsedTime()
+		floatGroup.current.rotation.set(Math.cos(t / 8) / 8, Math.sin(t / 8) / 16, -0.2 - Math.sin(t / 3) / 30)
+	})
+
+	// const getUniverseStores = appState(state => state.getUniverseStores)
+	// const { sectionPositions } = getUniverseStores()
+	// console.log(sectionPositions)
+
+	return (
+		<group ref={floatGroup}>
+			<HirecoUniverse />
+			<ContentHolder visible={currentView == 'page'} />
+		</group>
+	)
+}
+
 export default App
+
+function ContentOverlay(props) {
+	// const { returnCameraToOrigin } = props
+
+	const setActiveRing = appState(state => state.setActiveRing)
+	const setCurrentView = appState(state => state.setCurrentView)
+
+	return (
+		<div className={`wrap absolute z-40 h-screen  items-center pl-10 pr-10 grad-left flex pointer-events-none max-w-sm`}>
+			<div className='content text-white '>
+				<div
+					className='back pb-6 pointer-events-auto cursor-pointer'
+					onClick={() => {
+						setActiveRing('none')
+						setCurrentView('main')
+						// returnCameraToOrigin()
+						// setScrollControlsInitiated(false)
+					}}
+				>
+					<span className='uppercase font-bold tracking-wider'>Back</span>
+				</div>
+				{/* {currentView == 'page' ? (
+							<>
+								<div className='w-1/2'>
+									<p>{content[activePage]}</p>
+								</div>
+							</>
+						) : (
+							<></>
+						)} */}
+
+				<div className='flex pt-6'>
+					<div
+						className='read-more  pointer-events-auto cursor-pointer'
+						onClick={() => {
+							// setActiveRing('pageSection')
+							setCurrentView('page')
+							// setIsAnimating(true)
+						}}
+					>
+						<span className='uppercase font-bold tracking-wider pr-2 text-[#d19a41]'>Read More</span>
+					</div>
+				</div>
+			</div>
+			{/* </div> */}
+		</div>
+	)
+}

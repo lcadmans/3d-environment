@@ -4,6 +4,7 @@ import { useFrame } from '@react-three/fiber'
 import React, { useLayoutEffect, useRef, useState, Fragment, useEffect } from 'react'
 import { SetsModel } from '../Models/Set'
 import { appState } from '../../store'
+
 import useRefs from 'react-use-refs'
 
 import { Arrow } from '../'
@@ -15,6 +16,7 @@ import { a } from '@react-spring/three'
 import * as THREE from 'three'
 
 import { Vector3, BufferAttribute, StaticReadUsage } from 'three'
+import { ContentHolder } from '../'
 
 export function HirecoUniverse(props) {
 	return (
@@ -29,6 +31,7 @@ export function HirecoUniverse(props) {
 }
 
 function UniverseSolid(props) {
+	const getUniverseStores = appState(state => state.getUniverseStores)
 	const { colorValues } = getUniverseStores()
 	const { nodes, materials } = useGLTF('./models/hireco_3DScene_v16.glb')
 
@@ -49,16 +52,18 @@ function UniverseSolid(props) {
 				})
 				// console.log(node)
 				return (
-					<animated.mesh
+					<React.Fragment key={'flatGroup' + node.name}>
+						<animated.mesh
 						// position-y={translateYHidden}
-						key={'randomGroup' + node.name}
-					>
-						<animated.mesh position-y={translateYActive}>
-							<mesh geometry={nodes[node.name].geometry}>
-								<meshStandardMaterial color={colorValues[5]} opacity={0.1} transparent depthTest={false} blending={THREE.AdditiveBlending} wireframe={true} wireframeLinewidth={0.0001} />
-							</mesh>
+						// key={'randomGroup' + node.name}
+						>
+							<animated.mesh position-y={translateYActive}>
+								<mesh geometry={nodes[node.name].geometry}>
+									<meshStandardMaterial color={colorValues[5]} opacity={0.1} transparent depthTest={false} blending={THREE.AdditiveBlending} wireframe={true} wireframeLinewidth={0.0001} />
+								</mesh>
+							</animated.mesh>
 						</animated.mesh>
-					</animated.mesh>
+					</React.Fragment>
 				)
 			})}
 			{/* <mesh geometry={nodes.ring_6.geometry} scale={[1, 0.48, 1]}>
@@ -117,6 +122,7 @@ const Universe = props => {
 	const activeRing = appState(state => state.activeRing)
 	const currentView = appState(state => state.currentView)
 	const universeStores = appState(state => state.universeStores)
+	const getUniverseStores = appState(state => state.getUniverseStores)
 	const { colorValues } = getUniverseStores()
 
 	// Refs
@@ -189,25 +195,35 @@ const Universe = props => {
 
 						let sampleAmount = 10000 - index * 2000
 
+						let col = new THREE.Color(10.80299999999999, 3.25, 0.091)
+						let colHex = col.getHex()
+						console.log(colHex)
+						// let colHexColor = new THREE.Color(`0x${colHex}`)
+						// let colTest = new THREE.Color(`#f6b604`)
+						let colTest = new THREE.Color(colHex)
+						// console.log(colHexColor)
+
 						return (
-							<animated.mesh
+							<React.Fragment key={'randomGroup' + ringName}>
+								<animated.mesh
 								// position-y={translateYHidden}
-								key={'randomGroup' + ringName}
-							>
-								<animated.mesh position-y={translateYActiveRing}>
-									<group ref={ringsGroup}>
-										<Sampler count={sampleAmount} mesh={ringRef} instances={ringInstanceRef} transform={transformInstancesRandom} />
-										<instancedMesh args={[null, null, sampleAmount]} ref={ringInstanceRef}>
-											<sphereGeometry args={[0.0001, 1, 1]} />
-											{/* <a.meshBasicMaterial color={new THREE.InstancedBufferAttribute(...colorValues[9], 1000, false, 2)} emissiveIntensity={1} toneMapped={false} position={[0, 1, 0]}></a.meshBasicMaterial> */}
-											<a.meshBasicMaterial color={colorValues[13]} emissiveIntensity={1} toneMapped={false}></a.meshBasicMaterial>
-										</instancedMesh>
-										<mesh geometry={randomNodes[ringName + '-r'].geometry} ref={ringRef}>
-											<meshPhysicalMaterial transparent {...config} />
-										</mesh>
-									</group>
+								// key={'randomGroup' + ringName}
+								>
+									<animated.mesh position-y={translateYActiveRing}>
+										<group ref={ringsGroup}>
+											<Sampler count={sampleAmount} mesh={ringRef} instances={ringInstanceRef} transform={transformInstancesRandom} />
+											<instancedMesh args={[null, null, sampleAmount]} ref={ringInstanceRef}>
+												<sphereGeometry args={[0.0001, 1, 1]} />
+												{/* <a.meshBasicMaterial color={new THREE.InstancedBufferAttribute(...colorValues[9], 1000, false, 2)} emissiveIntensity={1} toneMapped={false} position={[0, 1, 0]}></a.meshBasicMaterial> */}
+												<a.meshBasicMaterial color={colTest} opacity={5} emissiveIntensity={5} toneMapped={false}></a.meshBasicMaterial>
+											</instancedMesh>
+											<mesh geometry={randomNodes[ringName + '-r'].geometry} ref={ringRef}>
+												<meshPhysicalMaterial transparent {...config} />
+											</mesh>
+										</group>
+									</animated.mesh>
 								</animated.mesh>
-							</animated.mesh>
+							</React.Fragment>
 						)
 					})}
 				</group>
@@ -275,6 +291,7 @@ function TextSections(props) {
 	const { index, nodeName, rotationAmount } = props
 	if (nodeName.includes('H_') || nodeName == 'ring_1') return null
 
+	const getUniverseStores = appState(state => state.getUniverseStores)
 	const { sectionPositions } = getUniverseStores()
 	const position = sectionPositions[nodeName]
 
@@ -352,26 +369,26 @@ function TextSections(props) {
 
 	return (
 		<>
-			{(currentView != 'page' && currentView != 'focus') || (currentView == 'focus' && activeRing == nodeName) ? (
-				<animated.mesh position-y={iconElevationActive}>
-					<group
-						ref={textGroupRef}
-						onPointerOver={() => {
-							handleMouseOver()
-							document.body.style.cursor = 'pointer'
-						}}
-						onPointerOut={() => {
-							// setScale(fetchScale(index))
-							handleMouseOut()
-							document.body.style.cursor = 'default'
-						}}
-						// onClick={() => {
-						// 	setActiveRing(nodeName)
-						// 	setCurrentView('focus')
-						// }}
-						position-y={0.02}
-					>
-						{/* <animated.mesh position-y={groupPositionY}> */}
+			<animated.mesh position-y={iconElevationActive}>
+				<group
+					ref={textGroupRef}
+					onPointerOver={() => {
+						handleMouseOver()
+						document.body.style.cursor = 'pointer'
+					}}
+					onPointerOut={() => {
+						// setScale(fetchScale(index))
+						handleMouseOut()
+						document.body.style.cursor = 'default'
+					}}
+					// onClick={() => {
+					// 	setActiveRing(nodeName)
+					// 	setCurrentView('focus')
+					// }}
+					position-y={0.02}
+				>
+					{/* <animated.mesh position-y={groupPositionY}> */}
+					<group visible={(currentView != 'page' && currentView != 'focus') || (currentView == 'focus' && activeRing == nodeName)}>
 						<animated.mesh scale={initialTextScale}>
 							<group position={[0, 0.04 + 0.1 / (index + 1), 0]}>
 								<Text font={'./fonts/Eveleth Clean Thin.otf'} anchorX='center' anchorY='middle' position={position} fontSize={0} outlineOffsetX={0} outlineOffsetY={0} outlineBlur={0.025} color={0xffffff} opacity={2}></Text>
@@ -396,7 +413,7 @@ function TextSections(props) {
 									scale={0.05}
 									position={[0.2, -0.1, 0]}
 									onClick={() => {
-										setActiveRing('pageSection')
+										// setActiveRing('pageSection')
 										setCurrentView('page')
 										setIsAnimating(true)
 									}}
@@ -421,6 +438,9 @@ function TextSections(props) {
 							</group> */}
 							</group>
 						</animated.mesh>
+					</group>
+
+					<group visible={(currentView == 'focus' && activeRing == nodeName) || (currentView == 'page' && activeRing == nodeName) || currentView == 'main'}>
 						<animated.mesh
 							scale={iconScale}
 							position={position}
@@ -435,41 +455,15 @@ function TextSections(props) {
 								</animated.mesh>
 							</group>
 						</animated.mesh>
-						{/* </animated.mesh> */}
 					</group>
-				</animated.mesh>
-			) : (
-				<></>
-			)}
+					{/* <group visible={currentView == 'page' && activeRing == nodeName} position={position}>
+						<ContentHolder />
+					</group> */}
+					{/* </animated.mesh> */}
+				</group>
+			</animated.mesh>
 		</>
 	)
-}
-
-// Unvierse Stores from Zustand State Management
-const getUniverseStores = () => {
-	let colorValues = []
-	let baseValues = [0.831, 0.25, 0.007]
-	for (let i = 0; i < 15; i++) {
-		let row = []
-		row.push(baseValues[0] * i)
-		row.push(baseValues[1] * i)
-		row.push(baseValues[2] * i)
-		colorValues.push(row)
-	}
-	const universeMultipliers = {}
-
-	const fectchSectionPositions = () => {
-		const { nodes, materials } = useGLTF('./models/hireco_3DScene_sectLocation-v1.glb')
-		let sectPositions = {}
-		Object.keys(nodes).forEach(a => {
-			let b = nodes[a]
-			if (b.type == 'Mesh') sectPositions[b.name] = b.position
-		})
-		return sectPositions
-	}
-	const sectionPositions = fectchSectionPositions()
-
-	return { colorValues, universeMultipliers, sectionPositions }
 }
 
 useGLTF.preload('./models/hireco_3DScene_v16.glb')
