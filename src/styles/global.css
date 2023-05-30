@@ -7,12 +7,12 @@
 @font-face {
 	font-family: 'Eveleth';
 	src: local('Eveleth'), url('/fonts/Eveleth Clean Regular.otf') format('opentype');
-	font-weight: Regular;
+	font-weight: 300;
 }
 @font-face {
 	font-family: 'Eveleth';
 	src: local('Eveleth'), url('/fonts/Eveleth Clean Thin.otf') format('opentype');
-	font-weight: Thin;
+	font-weight: 100;
 }
 
 .svg-temp {

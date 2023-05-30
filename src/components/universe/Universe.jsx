@@ -21,8 +21,9 @@ import { ContentHolder } from '../'
 export function HirecoUniverse(props) {
 	return (
 		<>
-			<UniverseSolid />
+			{/* <UniverseSolid /> */}
 			<Universe />
+			<UniverseGradient />
 			<HirecoLogo />
 
 			{/* <Universe_main /> */}
@@ -44,12 +45,13 @@ function UniverseSolid(props) {
 	return (
 		<group {...props} dispose={null}>
 			{filteredNodes.map((node, index) => {
-				const { translateYFocus, translateYActive, translateYHidden, planeOpacity, opacityActive } = useSpring({
+				const { translateYActive, pageOpacity } = useSpring({
 					translateYActive: activeRing == node.name ? 0.1 : 0,
-					translateYHidden: currentView == 'focus' && activeRing != node.name ? -0.05 : 0,
+					pageOpacity: currentView == 'page' ? 0 : 0.1,
 					// opacityActive: true ? 1 : 1,
 					config: config.gentle
 				})
+
 				// console.log(node)
 				return (
 					<React.Fragment key={'flatGroup' + node.name}>
@@ -59,7 +61,7 @@ function UniverseSolid(props) {
 						>
 							<animated.mesh position-y={translateYActive}>
 								<mesh geometry={nodes[node.name].geometry}>
-									<meshStandardMaterial color={colorValues[5]} opacity={0.1} transparent depthTest={false} blending={THREE.AdditiveBlending} wireframe={true} wireframeLinewidth={0.0001} />
+									<a.meshStandardMaterial color={colorValues[5]} opacity={pageOpacity} transparent depthTest={false} blending={THREE.AdditiveBlending} wireframe={true} wireframeLinewidth={0.0001} />
 								</mesh>
 							</animated.mesh>
 						</animated.mesh>
@@ -110,8 +112,8 @@ const transformInstancesRandom = ({ dummy, position }) => {
 	// console.log(ringName)
 
 	dummy.position.copy(position)
-	dummy.position.y += ((Math.random() / 150) * Math.PI) / 100
-	dummy.scale.setScalar(Math.random() * Math.random() * 7)
+	dummy.position.y += ((Math.random() / 150) * Math.PI) / 25
+	dummy.scale.setScalar(Math.random() * Math.random() * 12)
 	// dummy.rotation.z += Math.random() - 0.5 * (Math.PI * 0.5)
 	// dummy.rotation.x += Math.random() - 0.5 * (Math.PI * 0.5)
 }
@@ -186,22 +188,18 @@ const Universe = props => {
 							ringsGroup.current.scale.y = 0.8 + ((1 + Math.sin(t / 2)) / 90) * multiplier
 						})
 
-						const { translateYFocus, translateYActiveRing, translateYHidden, planeOpacity, opacityActive } = useSpring({
+						// let sampleAmount = 10000 - index * 2000
+						let sampleAmount = 10000 - index * 2000
+
+						let col = new THREE.Color(...colorValues[3])
+
+						const { translateYActiveRing, emissiveIntensity } = useSpring({
 							translateYActiveRing: activeRing == ringName ? 0.1 : 0,
+							emissiveIntensity: currentView == 'focus' || currentView == 'page' ? 0 : 2,
 							translateYHidden: currentView == 'focus' && activeRing != ringName ? 0 : 0,
 							opacityActive: true ? 1 : 1,
 							config: config.gentle
 						})
-
-						let sampleAmount = 10000 - index * 2000
-
-						let col = new THREE.Color(10.80299999999999, 3.25, 0.091)
-						let colHex = col.getHex()
-						console.log(colHex)
-						// let colHexColor = new THREE.Color(`0x${colHex}`)
-						// let colTest = new THREE.Color(`#f6b604`)
-						let colTest = new THREE.Color(colHex)
-						// console.log(colHexColor)
 
 						return (
 							<React.Fragment key={'randomGroup' + ringName}>
@@ -213,9 +211,10 @@ const Universe = props => {
 										<group ref={ringsGroup}>
 											<Sampler count={sampleAmount} mesh={ringRef} instances={ringInstanceRef} transform={transformInstancesRandom} />
 											<instancedMesh args={[null, null, sampleAmount]} ref={ringInstanceRef}>
-												<sphereGeometry args={[0.0001, 1, 1]} />
+												<sphereGeometry args={[0.00005, 1, 1]} />
 												{/* <a.meshBasicMaterial color={new THREE.InstancedBufferAttribute(...colorValues[9], 1000, false, 2)} emissiveIntensity={1} toneMapped={false} position={[0, 1, 0]}></a.meshBasicMaterial> */}
-												<a.meshBasicMaterial color={colTest} opacity={5} emissiveIntensity={5} toneMapped={false}></a.meshBasicMaterial>
+												<a.meshStandardMaterial transparent alpha={true} opacity={1} emissive={col} emissiveIntensity={emissiveIntensity} color={col} toneMapped={false}></a.meshStandardMaterial>
+												{/* <a.meshStandardMaterial color={colorValues[9]} emissiveIntensity={1} toneMapped={false} position={[0, 1, 0]}></a.meshStandardMaterial> */}
 											</instancedMesh>
 											<mesh geometry={randomNodes[ringName + '-r'].geometry} ref={ringRef}>
 												<meshPhysicalMaterial transparent {...config} />
@@ -239,13 +238,15 @@ const Universe = props => {
 						const focusRing = appState(state => state.focusRing)
 						const activeRing = appState(state => state.activeRing)
 
-						const { translateYFocus, translateYActive, translateYHidden, planeOpacity } = useSpring({
+						const { translateYActive, emissiveIntensity, ringOpacity } = useSpring({
 							translateYActive: activeRing == ringName ? 0.1 : 0,
 							translateYHidden: currentView == 'focus' && activeRing != ringName ? 0 : 0,
+							emissiveIntensity: currentView == 'focus' || currentView == 'page' ? 0 : 2,
+							ringOpacity: currentView != 'page' || (currentView == 'page' && activeRing == ringName) ? 1 : 0,
 							config: config.gentle
 						})
 
-						let sampleAmount = 24000 - index * 6000
+						let sampleAmount = 24000 - index * 5600
 						let ringSize = 0.0004
 						if (ringName == 'ring_6') {
 							sampleAmount = sampleAmount + 15000
@@ -262,6 +263,8 @@ const Universe = props => {
 
 						// if (ringName != 'ring_6') return <></>
 
+						let col = new THREE.Color(...colorValues[3])
+
 						return (
 							<animated.mesh
 								//  position-y={translateYHidden}
@@ -272,7 +275,8 @@ const Universe = props => {
 									<Sampler count={sampleAmount} mesh={ringRef} instances={ringInstanceRef} transform={transformInstances} />
 									<instancedMesh args={[null, null, sampleAmount]} ref={ringInstanceRef}>
 										<sphereGeometry args={[ringSize, 1, 1]} />
-										<meshBasicMaterial color={colorValues[9]} emissiveIntensity={1} toneMapped={false} position={[0, 1, 0]}></meshBasicMaterial>
+										<a.meshStandardMaterial transparent alpha={true} opacity={ringOpacity} emissive={col} emissiveIntensity={emissiveIntensity} color={col} toneMapped={false}></a.meshStandardMaterial>
+										{/* <meshBasicMaterial color={colorValues[9]} emissiveIntensity={1} toneMapped={false} position={[0, 1, 0]}></meshBasicMaterial> */}
 									</instancedMesh>
 									<mesh geometry={flatNodes[ringName].geometry} ref={ringRef}>
 										<meshPhysicalMaterial transparent {...config} />
@@ -357,11 +361,12 @@ function TextSections(props) {
 		setFocusRing('none')
 	}
 
-	const { iconScalar, groupPositionY, iconElevationActive } = useSpring({
-		iconScalar: activeRing == nodeName ? 1.5 : 1,
+	const { iconScalar, groupPositionY, iconElevationActive, iconPageScaler } = useSpring({
+		iconScalar: activeRing == nodeName ? 1.2 : 0.8,
 		groupPositionY: activeRing == nodeName ? 0.1 : 0,
 		translateYHidden: currentView == 'focus' && activeRing != nodeName ? -0.05 : 0,
 		iconElevationActive: activeRing == nodeName ? 0.1 : 0.05,
+		iconPageScaler: currentView == 'page' ? 0.33 : 1,
 		config: config.gentle
 	})
 
@@ -390,7 +395,7 @@ function TextSections(props) {
 					{/* <animated.mesh position-y={groupPositionY}> */}
 					<group visible={(currentView != 'page' && currentView != 'focus') || (currentView == 'focus' && activeRing == nodeName)}>
 						<animated.mesh scale={initialTextScale}>
-							<group position={[0, 0.04 + 0.1 / (index + 1), 0]}>
+							<group position={[0, 0.25 / (index + 3), 0]}>
 								<Text font={'./fonts/Eveleth Clean Thin.otf'} anchorX='center' anchorY='middle' position={position} fontSize={0} outlineOffsetX={0} outlineOffsetY={0} outlineBlur={0.025} color={0xffffff} opacity={2}></Text>
 								<Text font={'./fonts/Eveleth Clean Regular.otf'} anchorX='center' anchorY='middle' position={position} fontSize={[0.035, 0.03, 0.025, 0.02, 0.02, 0.015][index]} outlineOffsetX={0} outlineOffsetY={0} outlineBlur={0.025} opacity={2} ref={textContentRef} color={0xffffff}>
 									{copy[nodeName].title}
@@ -440,18 +445,23 @@ function TextSections(props) {
 						</animated.mesh>
 					</group>
 
-					<group visible={(currentView == 'focus' && activeRing == nodeName) || (currentView == 'page' && activeRing == nodeName) || currentView == 'main'}>
+					<group
+					// visible={(currentView == 'focus' && activeRing == nodeName) || (currentView == 'page' && activeRing == nodeName) || currentView == 'main'}
+					>
 						<animated.mesh
 							scale={iconScale}
 							position={position}
 							onClick={() => {
 								setActiveRing(nodeName)
-								setCurrentView('focus')
+								setCurrentView('page')
+								// setCurrentView('focus')
 							}}
 						>
 							<group>
-								<animated.mesh scale={iconScalar}>
-									<SetsModel position={position} index={index} nodeName={nodeName} />
+								<animated.mesh scale={iconPageScaler}>
+									<animated.mesh scale={iconScalar}>
+										<SetsModel position={position} index={index} nodeName={nodeName} />
+									</animated.mesh>
 								</animated.mesh>
 							</group>
 						</animated.mesh>
@@ -466,6 +476,20 @@ function TextSections(props) {
 	)
 }
 
+function UniverseGradient(props) {
+	const { nodes, materials } = useGLTF('./models/universe/universe_gradient.glb')
+	return (
+		<group {...props} dispose={null}>
+			<mesh castShadow receiveShadow geometry={nodes.ring_6_s.geometry} material={materials['RING.006']} />
+			<mesh castShadow receiveShadow geometry={nodes.ring_5_s.geometry} material={materials['RING.006']} />
+			<mesh castShadow receiveShadow geometry={nodes.ring_3_s.geometry} material={materials.RINGS} />
+			<mesh castShadow receiveShadow geometry={nodes.ring_4_s.geometry} material={materials['RINGS.002']} />
+			<mesh castShadow receiveShadow geometry={nodes.ring_2_s.geometry} material={materials['RINGS.001']} />
+		</group>
+	)
+}
+
+useGLTF.preload('./models/universe/universe_gradient.glb')
 useGLTF.preload('./models/hireco_3DScene_v16.glb')
 useGLTF.preload('./models/universe/hireco_3DScene_ringR-v1-forGLTF.glb')
 // useGLTF.preload('./models/hireco_3DScene_beveled-v4.glb')

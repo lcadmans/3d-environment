@@ -7,9 +7,11 @@ import { appState } from '../../store'
 import { animated, a, update, useSpring, config } from '@react-spring/three'
 import { useFrame } from '@react-three/fiber'
 
-export const ContentHolder = () => {
+export const ContentHolder = props => {
 	const [points, setPoints] = useState([])
 	// const [data, setData] = useState(['', '', '', '', '', '', '', '', '', ''])
+
+	const { sectionName } = props
 
 	const group = useRef()
 	const subGroup = useRef()
@@ -18,54 +20,51 @@ export const ContentHolder = () => {
 	const activeRing = appState(state => state.activeRing)
 	const getUniverseStores = appState(state => state.getUniverseStores)
 	const currentView = appState(state => state.currentView)
-	const ringNames = appState(state => state.ringNames)
+	// const ringNames = appState(state => state.ringNames)
+	// ringNames[activeRing]
 	const sectionContent = appState(state => state.sectionContent)
 
-	const [sectionName, setSectionName] = useState(ringNames[activeRing])
+	// const activeTile = appState(state => state.activeTile)
+	const setActiveTile = appState(state => state.setActiveTile)
+
+	// const [sectionName, setSectionName] = useState(ringNames[activeRing])
+	// const sectionName = ringNames[activeRing]
+	// const content = sectionContent(sectionName)
+	// const [content, setContent] = useState(sectionContent(sectionName))
+	const content = sectionContent(sectionName)
 
 	const { sectionPositions } = getUniverseStores()
-
 	const position = sectionPositions[activeRing]
 
-	const content = sectionContent('Experts')
+	// const activeContent = sectionContent(ringNames[activeRing])
+	// const [content, setContent] = useState(activeContent)
 
 	// useEffect(() => {
+	// 	if (!activeRing || activeRing == 'none') return
 	// 	// console.log(activeRing)
-
-	// 	let copy = sectionCopy[sectionName]
-	// 	setSectionContent(copy)
-	// 	setContent(copy.content)
-	// }, [])
-
-	// useEffect(() => {
-	// 	setSectionContent(sectionCopy[sectionName] || [])
+	// 	setSectionName(ringNames[activeRing])
 	// }, [activeRing])
 
 	// useEffect(() => {
-	// 	setContent(sectionContent.content)
-	// }, [sectionContent])
-
-	// useEffect(() => {
+	// 	console.log('sectionName')
 	// 	console.log(sectionName)
-	// 	console.log(sectionContent)
-	// }, [sectionContent])
+	// 	if (!sectionName) return
+	// 	setContent(sectionContent(ringNames[activeRing]))
+	// }, [sectionName])
+
+	useEffect(() => {
+		// if (!activeRing) return
+		// console.log('ringNames')
+		// console.log(ringNames[activeRing])
+		// setContent(sectionContent(ringNames[activeRing]))
+	}, [activeRing])
 
 	useFrame(({ camera }) => {
 		if (!group.current) return
 
-		subGroup.current.rotation.y += 0.01
+		subGroup.current.rotation.y += 0.001
 		// group.current.lookAt(camera.position)
 	})
-	// useEffect(() => {
-	// 	for (let i = 0; i < 100; i++) {
-	// 		let _points = points
-	// 		const matrix = new THREE.Matrix4()
-	// 		randomizeMatrix(matrix)
-	// 		_points.push(matrix)
-	// 		setPoints(_points)
-	// 	}
-	// 	setData([...Array(20).keys()])
-	// }, [])
 
 	function randomIntFromInterval(min, max) {
 		let random = Math.random() * (max - min) + min
@@ -80,6 +79,13 @@ export const ContentHolder = () => {
 	// 	config: config.gentle
 	// })
 
+	// useEffect(() => {
+	// console.log(activeTile)
+	// }, [activeTile])
+
+	console.log('content')
+	console.log(content)
+	// if (!activeRing || activeRing == 'none') return <></>
 	return (
 		<>
 			<animated.mesh visible={currentView == 'page'} position={position} ref={group}>
@@ -89,41 +95,7 @@ export const ContentHolder = () => {
 					// position={position}
 					ref={subGroup}
 				>
-					{content &&
-						content.content.map((a, index) => {
-							const { image, title, subtitle, description, cta } = a
-							const contentRef = useRef()
-
-							useFrame(({ camera }) => {
-								if (!group.current) return
-
-								// subGroup.current.rotation.y += 0.01
-								contentRef.current.lookAt(camera.position)
-							})
-
-							let x = randomIntFromInterval(-0.125, 0.125)
-							let y = randomIntFromInterval(-0.125, 0.125)
-							let z = randomIntFromInterval(-0.125, 0.125)
-
-							const { contentPosition } = useSpring({
-								contentPosition: currentView == 'page' ? [x, y, z] : [0, 0, 0],
-
-								config: config.gentle
-							})
-
-							// console.log(x)
-
-							return (
-								// <Sphere args={[0.01, 10, 10]} key={'sphere - ' + index} position={[x, y, z]}>
-								// 	<meshNormalMaterial />
-								// </Sphere>
-								<animated.mesh visible={currentView == 'page'} position={contentPosition} ref={contentRef} key={'sphere - ' + index}>
-									<group>
-										<Tile imageSrc={image} title={title} subtitle={subtitle} description={description} cta={cta} />
-									</group>
-								</animated.mesh>
-							)
-						})}
+					{content && content.length > 0 ? <TileHolder content={content} /> : <></>}
 
 					{/* <Sphere args={[0.01 10, 10]} ref={sphereRef}>
 					<meshNormalMaterial />
@@ -133,6 +105,64 @@ export const ContentHolder = () => {
 			{/* <Tile /> */}
 		</>
 	)
+}
+
+function TileHolder({ content }) {
+	const activeRing = appState(state => state.activeRing)
+	const ringNames = appState(state => state.ringNames)
+	const currentView = appState(state => state.currentView)
+	const [sectionName, setSectionName] = useState(ringNames[activeRing])
+
+	if (!content) return
+	return content.map((a, index) => {
+		// console.log(a)
+		// const { images, title, subtitle, description, cta } = a
+		const { Title, Subtitle, Description, CTA } = a
+		let images
+		images = a['Image/Videos']
+		if (!images) images = ['1.jpg']
+
+		console.log(images)
+		const contentRef = useRef()
+
+		let randomCount = Math.floor(Math.random() * (2 - 1 + 1) + 1)
+		let ratios = [
+			[0.07, 0.04],
+			[0.04, 0.09]
+		]
+
+		const tileName = sectionName + '_' + index
+
+		useFrame(({ camera }) => {
+			// if (!group.current) return
+
+			// subGroup.current.rotation.y += 0.01
+			contentRef.current.lookAt(camera.position)
+		})
+
+		let x = randomIntFromInterval(-0.125, 0.125)
+		let y = randomIntFromInterval(-0.125, 0.125)
+		let z = randomIntFromInterval(-0.125, 0.125)
+
+		const { contentPosition } = useSpring({
+			contentPosition: currentView == 'page' ? [x, y, z] : [0, 0, 0],
+
+			config: config.gentle
+		})
+
+		// console.log(x)
+
+		return (
+			// <Sphere args={[0.01, 10, 10]} key={'sphere - ' + index} position={[x, y, z]}>
+			// 	<meshNormalMaterial />
+			// </Sphere>
+			<animated.mesh visible={currentView == 'page'} position={contentPosition} ref={contentRef} key={'tile - ' + index}>
+				<group>
+					<Tile id={Title} planeArgs={[...ratios[randomCount - 1], 5, 5]} imageSrc={images[0]} title={Title} subtitle={Subtitle} description={Description} cta={CTA} />
+				</group>
+			</animated.mesh>
+		)
+	})
 }
 
 const randomizeMatrix = (function () {
@@ -159,3 +189,11 @@ const randomizeMatrix = (function () {
 })()
 
 export default ContentHolder
+
+function randomIntFromInterval(min, max) {
+	let random = Math.random() * (max - min) + min
+	// console.log('before = ' + random)
+	if (random < 0.075 && random > -0.075) random = random * 1.5
+	// console.log('after = ' + random)
+	return random
+}

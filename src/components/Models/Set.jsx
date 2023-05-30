@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { Box, OrbitControls, useGLTF, useAnimations, Sphere } from '@react-three/drei'
-
+import { shallow } from 'zustand/shallow'
 import { SourceSection, SupportSection, SmartTechSection, ExpertSection, WelfareSection } from './iconography'
 
 import { useSpring, animated } from '@react-spring/three'
@@ -56,7 +56,7 @@ function renderSwitch(nodeName, index) {
 export function SetsModel(props) {
 	const { index, position, nodeName } = props
 
-	const activeRing = appState(state => state.activeRing)
+	const activeRing = appState(state => state.activeRing, shallow)
 	const setActiveRing = appState(state => state.setActiveRing)
 	const focusRing = appState(state => state.focusRing)
 	const setFocusRing = appState(state => state.setFocusRing)
@@ -71,7 +71,7 @@ export function SetsModel(props) {
 	const group = useRef()
 
 	useFrame(state => {
-		group.current.rotation.y += 0.01
+		group.current.rotation.y += 0.0033
 		// console.log(first)
 		const t = state.clock.getElapsedTime()
 		// console.log(1 + Math.sin(t))
@@ -101,16 +101,12 @@ export function SetsModel(props) {
 		setFocusRing('none')
 	}
 
-	// let blendingMode = 'NoBlending'
-	// let blendingMode = 'NormalBlending'
-	// let blendingMode = 'AdditiveBlending'
-	// let blendingMode = 'SubtractiveBlending'
-	// let blendingMode = 'MultiplyBlending'
-	let blendingMode = 'CustomBlending'
 	return (
 		// <animated.mesh scale={scale} position={position}>
 		<group
-			onClick={() => setActiveRing(nodeName)}
+			onClick={() => {
+				if (currentView != 'page') setActiveRing(nodeName)
+			}}
 			// onPointerOver={() => {
 			// 	handleMouseOver()
 			// 	document.body.style.cursor = 'pointer'
@@ -121,6 +117,7 @@ export function SetsModel(props) {
 			// 	document.body.style.cursor = 'default'
 			// }}
 			ref={group}
+			visible={currentView != 'page' || (currentView == 'page' && activeRing != nodeName)}
 			// scale={scale}
 			// onClick={() => setActive(!active)}
 			// onPointerLeave={(document.body.style.cursor = 'cursor')}

@@ -106,28 +106,20 @@ const _Scene = props => {
 
 	const [cameraPositions, setCameraPositions] = useState(baseCameraPositions)
 	const activeRing = appState(state => state.activeRing)
-	const numPages = appState(state => state.numPages)
-	const isAnimating = appState(state => state.isAnimating)
-	const setIsAnimating = appState(state => state.setIsAnimating)
+
 	const currentView = appState(state => state.currentView)
 
-	const cameraRefInfo = appState(state => state.cameraRefInfo)
-	const setCameraRefInfo = appState(state => state.setCameraRefInfo)
-	const activeCameraAnchor = appState(state => state.activeCameraAnchor)
-	const setActiveCameraAnchor = appState(state => state.setActiveCameraAnchor)
-	const generateCirclePoints = appState(state => state.generateCirclePoints)
-	const cameraOrbitPoints = appState(state => state.cameraOrbitPoints)
 	const cameraControlsMouseButtons = appState(state => state.cameraControlsMouseButtons)
-	const forcePageUpdate = appState(state => state.forcePageUpdate)
-	const setForcePageUpdate = appState(state => state.setForcePageUpdate)
-	const dimensions = appState(state => state.dimensions, shallow)
-	const scrollControlsInitiated = appState(state => state.scrollControlsInitiated, shallow)
-	const setScrollControlsInitiated = appState(state => state.setScrollControlsInitiated)
-	const setReturnCameraToOrigin = appState(state => state.setReturnCameraToOrigin)
+	const setActiveTile = appState(state => state.setActiveTile)
+	const setCameraControlsref = appState(state => state.setCameraControlsref)
 
 	const getUniverseStores = appState(state => state.getUniverseStores)
 	const { sectionPositions } = getUniverseStores()
-	console.log(sectionPositions)
+	// console.log(sectionPositions)
+
+	useEffect(() => {
+		setCameraControlsref(cameraControlsRef)
+	}, [cameraControlsRef])
 
 	function updateCameraPosition(props) {
 		const { cameraControlsRef, cameraPositionsStore, activeRing } = props
@@ -138,10 +130,9 @@ const _Scene = props => {
 		let [endPositionX, endPositionY, endPositionZ] = [cameraPositionsStore.focus[activeRing].position.x, cameraPositionsStore.focus[activeRing].position.y, cameraPositionsStore.focus[activeRing].position.z]
 
 		if (currentView == 'page') {
-			;('pageTarget')
 			let { x: endTargetX, y: endTargetY, z: endTargetZ } = sectionPositions[activeRing]
-			console.log(endTargetX)
-			cameraControlsRef.current?.lerpLookAt(initialPositionX, initialPositionY, initialPositionZ, initialTargetX, initialTargetY, initialTargetZ, endPositionX, endPositionY, endPositionZ, endTargetX, endTargetY, endTargetZ, 0.9, true)
+
+			cameraControlsRef.current?.lerpLookAt(initialPositionX, initialPositionY, initialPositionZ, initialTargetX, initialTargetY, initialTargetZ, endPositionX, endPositionY + 0.25, endPositionZ, endTargetX, endTargetY + 0.1, endTargetZ, 0.9, true)
 		} else {
 			let [endTargetX, endTargetY, endTargetZ] = [cameraPositionsStore.focus[activeRing].target.x, cameraPositionsStore.focus[activeRing].target.y, cameraPositionsStore.focus[activeRing].target.z]
 			cameraControlsRef.current?.lerpLookAt(initialPositionX, initialPositionY, initialPositionZ, initialTargetX, initialTargetY, initialTargetZ, endPositionX, endPositionY, endPositionZ, endTargetX, endTargetY, endTargetZ, 0.9, true)
@@ -165,6 +156,9 @@ const _Scene = props => {
 	useEffect(() => {
 		if (!cameraControlsRef) return null
 
+		if (currentView != 'page') {
+			setActiveTile(null)
+		}
 		if (currentView == 'page') {
 		}
 		if ((activeRing.includes('ring') && currentView == 'focus') || currentView == 'page') {
@@ -209,9 +203,9 @@ const _Scene = props => {
 					ref={cameraControlsRef}
 					enableZoom={false}
 					mouseButtons={cameraControlsMouseButtons}
-					// onEnd={e => {
-					// 	getCameraInformation(e)
-					// }}
+					onEnd={e => {
+						getCameraInformation(e)
+					}}
 					makedefault
 					smoothTime={smoothTime}
 					camera={cameraRef.current}
@@ -274,11 +268,13 @@ function Scene() {
 	// const getUniverseStores = appState(state => state.getUniverseStores)
 	// const { sectionPositions } = getUniverseStores()
 	// console.log(sectionPositions)
+	const ringNames = appState(state => state.ringNames)
+	const activeRing = appState(state => state.activeRing, shallow)
 
 	return (
 		<group ref={floatGroup}>
 			<HirecoUniverse />
-			<ContentHolder visible={currentView == 'page'} />
+			<ContentHolder visible={currentView == 'page'} sectionName={ringNames[activeRing]} />
 		</group>
 	)
 }
@@ -290,9 +286,12 @@ function ContentOverlay(props) {
 
 	const setActiveRing = appState(state => state.setActiveRing)
 	const setCurrentView = appState(state => state.setCurrentView)
+	const activeRing = appState(state => state.activeRing, shallow)
+	const ringNames = appState(state => state.ringNames)
+	const currentView = appState(state => state.currentView, shallow)
 
 	return (
-		<div className={`wrap absolute z-40 h-screen  items-center pl-10 pr-10 grad-left flex pointer-events-none max-w-sm`}>
+		<div className={`wrap absolute z-40 h-screen  items-center pl-10 pr-10 grad-left flex pointer-events-none w-1/2 `}>
 			<div className='content text-white '>
 				<div
 					className='back pb-6 pointer-events-auto cursor-pointer'
@@ -305,15 +304,15 @@ function ContentOverlay(props) {
 				>
 					<span className='uppercase font-bold tracking-wider'>Back</span>
 				</div>
-				{/* {currentView == 'page' ? (
-							<>
-								<div className='w-1/2'>
-									<p>{content[activePage]}</p>
-								</div>
-							</>
-						) : (
-							<></>
-						)} */}
+				{currentView == 'page' ? (
+					<>
+						<div className=''>
+							<GenerateContent ringNames={ringNames} activeRing={activeRing} />
+						</div>
+					</>
+				) : (
+					<></>
+				)}
 
 				<div className='flex pt-6'>
 					<div
@@ -330,5 +329,67 @@ function ContentOverlay(props) {
 			</div>
 			{/* </div> */}
 		</div>
+	)
+}
+
+function GenerateContent(props) {
+	const activeTile = appState(state => state.activeTile, shallow)
+	const sectionContent = appState(state => state.sectionContent)
+	const sectionCopy = appState(state => state.sectionCopy)
+	const getContentByTitle = appState(state => state.getContentByTitle)
+
+	const { content, ringNames, activeRing } = props
+
+	const ringName = ringNames[activeRing]
+	const currentContent = sectionContent(ringName)
+	const currentSectionCopy = sectionCopy(ringName)
+
+	const [activeTileContent, setActiveTileContent] = useState(null)
+
+	// console.log('sectionContnet')
+	// console.log(currentSectionCopy)
+
+	// if (!currentContent) return <></>
+
+	const { subTitle: categorySubTitile, description: categoryDescription } = currentSectionCopy
+
+	// console.log('subTitle')
+	// console.log(subTitle)
+
+	let title, subTitle, description, cta
+
+	useEffect(() => {
+		// console.log(activeTile)
+		if (!activeTile) return setActiveTileContent(null)
+		const content = getContentByTitle(activeTile)
+		setActiveTileContent(...content)
+	}, [activeTile])
+
+	if (activeTileContent) {
+		// let activetileContent = currentContent.content[activeTile.slice(-1)]
+		// title = activetileContent.title
+		console.log(activeTileContent)
+		title = activeTile
+		// subTitle = activetileContent.subTitle
+		subTitle = activeTileContent.Subtitle
+		description = activeTileContent.Description
+		// description = activetileContent.description
+		// description =
+		// 	'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.'
+		// cta = activetileContent.cta
+	} else {
+		title = ringName
+		subTitle = categorySubTitile
+		description = categoryDescription
+		cta = 'Read More'
+	}
+
+	return (
+		<>
+			{/* <p>test</p> */}
+			<h1 className={'text-7xl text-[#d19a41] font-[600]'}>{title}</h1>
+			<h2 className={'text-3xl'}>{subTitle}</h2>
+			<p className={'text-sm'}>{description}</p>
+		</>
 	)
 }
