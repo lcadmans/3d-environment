@@ -1,6 +1,6 @@
 import { animated, config, useSpring } from '@react-spring/three'
-import { Sampler, Text, useGLTF, useAnimations, ComputedAttribute } from '@react-three/drei'
-import { useFrame } from '@react-three/fiber'
+import { Sampler, Text, useGLTF, useAnimations, ComputedAttribute, Torus, useBounds } from '@react-three/drei'
+import { useFrame, useLoader } from '@react-three/fiber'
 import React, { useLayoutEffect, useRef, useState, Fragment, useEffect } from 'react'
 import { SetsModel } from '../Models/Set'
 import { appState } from '../../store'
@@ -19,11 +19,15 @@ import { Vector3, BufferAttribute, StaticReadUsage } from 'three'
 import { ContentHolder } from '../'
 
 export function HirecoUniverse(props) {
+	const testRef = useRef()
+
 	return (
 		<>
 			{/* <UniverseSolid /> */}
+
 			<Universe />
 			<UniverseGradient />
+			<UniverseSampleNew />
 			<HirecoLogo />
 
 			{/* <Universe_main /> */}
@@ -167,7 +171,7 @@ const Universe = props => {
 	return (
 		<>
 			<group ref={masterGroup}>
-				<group ref={randomGroup}>
+				{/* <group ref={randomGroup}>
 					{randomNodesProcessed.map((ring, index) => {
 						const ringRef = useRef()
 						const ringsGroup = useRef()
@@ -189,12 +193,12 @@ const Universe = props => {
 						})
 
 						// let sampleAmount = 10000 - index * 2000
-						let sampleAmount = 10000 - index * 2000
+						let sampleAmount = 7000 - index * 1000
 
 						let col = new THREE.Color(...colorValues[3])
 
 						const { translateYActiveRing, emissiveIntensity } = useSpring({
-							translateYActiveRing: activeRing == ringName ? 0.1 : 0,
+							translateYActiveRing: activeRing == ringName ? 0 : 0,
 							emissiveIntensity: currentView == 'focus' || currentView == 'page' ? 0 : 2,
 							translateYHidden: currentView == 'focus' && activeRing != ringName ? 0 : 0,
 							opacityActive: true ? 1 : 1,
@@ -212,9 +216,7 @@ const Universe = props => {
 											<Sampler count={sampleAmount} mesh={ringRef} instances={ringInstanceRef} transform={transformInstancesRandom} />
 											<instancedMesh args={[null, null, sampleAmount]} ref={ringInstanceRef}>
 												<sphereGeometry args={[0.00005, 1, 1]} />
-												{/* <a.meshBasicMaterial color={new THREE.InstancedBufferAttribute(...colorValues[9], 1000, false, 2)} emissiveIntensity={1} toneMapped={false} position={[0, 1, 0]}></a.meshBasicMaterial> */}
 												<a.meshStandardMaterial transparent alpha={true} opacity={1} emissive={col} emissiveIntensity={emissiveIntensity} color={col} toneMapped={false}></a.meshStandardMaterial>
-												{/* <a.meshStandardMaterial color={colorValues[9]} emissiveIntensity={1} toneMapped={false} position={[0, 1, 0]}></a.meshStandardMaterial> */}
 											</instancedMesh>
 											<mesh geometry={randomNodes[ringName + '-r'].geometry} ref={ringRef}>
 												<meshPhysicalMaterial transparent {...config} />
@@ -225,7 +227,7 @@ const Universe = props => {
 							</React.Fragment>
 						)
 					})}
-				</group>
+				</group> */}
 
 				<group ref={flatGroup}>
 					{flatNodesProcessed.map((ring, index) => {
@@ -239,27 +241,27 @@ const Universe = props => {
 						const activeRing = appState(state => state.activeRing)
 
 						const { translateYActive, emissiveIntensity, ringOpacity } = useSpring({
-							translateYActive: activeRing == ringName ? 0.1 : 0,
+							translateYActive: activeRing == ringName ? 0 : 0,
 							translateYHidden: currentView == 'focus' && activeRing != ringName ? 0 : 0,
 							emissiveIntensity: currentView == 'focus' || currentView == 'page' ? 0 : 2,
 							ringOpacity: currentView != 'page' || (currentView == 'page' && activeRing == ringName) ? 1 : 0,
 							config: config.gentle
 						})
 
-						let sampleAmount = 24000 - index * 5600
+						let sampleAmount = 5000 - index * 500
 						let ringSize = 0.0004
-						if (ringName == 'ring_6') {
-							sampleAmount = sampleAmount + 15000
-							ringSize = 0.0008
-						}
-						if (ringName == 'ring_5') {
-							sampleAmount = sampleAmount + 5000
-							ringSize = 0.0006
-						}
-						if (ringName == 'ring_4') {
-							sampleAmount = sampleAmount + 3000
-							ringSize = 0.0004
-						}
+						// if (ringName == 'ring_6') {
+						// 	sampleAmount = sampleAmount + 15000
+						// 	ringSize = 0.0008
+						// }
+						// if (ringName == 'ring_5') {
+						// 	sampleAmount = sampleAmount + 5000
+						// 	ringSize = 0.0006
+						// }
+						// if (ringName == 'ring_4') {
+						// 	sampleAmount = sampleAmount + 3000
+						// 	ringSize = 0.0004
+						// }
 
 						// if (ringName != 'ring_6') return <></>
 
@@ -272,15 +274,14 @@ const Universe = props => {
 							>
 								<animated.mesh position-y={translateYActive}>
 									<TextSections nodeName={ringName} index={index} />
-									<Sampler count={sampleAmount} mesh={ringRef} instances={ringInstanceRef} transform={transformInstances} />
+									{/* <Sampler count={sampleAmount} mesh={ringRef} instances={ringInstanceRef} transform={transformInstances} />
 									<instancedMesh args={[null, null, sampleAmount]} ref={ringInstanceRef}>
 										<sphereGeometry args={[ringSize, 1, 1]} />
 										<a.meshStandardMaterial transparent alpha={true} opacity={ringOpacity} emissive={col} emissiveIntensity={emissiveIntensity} color={col} toneMapped={false}></a.meshStandardMaterial>
-										{/* <meshBasicMaterial color={colorValues[9]} emissiveIntensity={1} toneMapped={false} position={[0, 1, 0]}></meshBasicMaterial> */}
 									</instancedMesh>
 									<mesh geometry={flatNodes[ringName].geometry} ref={ringRef}>
 										<meshPhysicalMaterial transparent {...config} />
-									</mesh>
+									</mesh> */}
 								</animated.mesh>
 							</animated.mesh>
 						)
@@ -336,14 +337,10 @@ function TextSections(props) {
 	}
 
 	useFrame(({ camera }) => {
-		if (!textContentRef.current) return
-		textContentRef.current.quaternion.copy(camera.quaternion)
-		textContentRef.current.lookAt(camera.position)
+		// if (!textContentRef.current) return
+		// textContentRef.current.quaternion.copy(camera.quaternion)
+		// textContentRef.current.lookAt(camera.position)
 	})
-
-	useLayoutEffect(() => {
-		// textContentRef.current.position.y = textContentRef.current.position.y + 0.05
-	}, [])
 
 	function fetchScale(index) {
 		let scale = 0.3
@@ -478,14 +475,85 @@ function TextSections(props) {
 
 function UniverseGradient(props) {
 	const { nodes, materials } = useGLTF('./models/universe/universe_gradient.glb')
+
+	const getUniverseStores = appState(state => state.getUniverseStores)
+	const activeTile = appState(state => state.activeTile)
+
+	const { colorValues } = getUniverseStores()
+
+	let col = new THREE.Color(...colorValues[1])
+
+	Object.keys(materials).forEach(a => {
+		let key = a
+
+		materials[a].emissive = new THREE.Color(3, 2, 0)
+		materials[a].transparent = true
+		materials[a].alpha = true
+		materials[a].emissiveIntensity = 2
+		materials[a].color = col
+		materials[a].toneMapped = false
+	})
+
+	// console.log(materials['RING.006'])
+
+	const { activeTileOpacity } = useSpring({
+		activeTileOpacity: activeTile ? 0.05 : 1,
+		config: config.gentle
+	})
+
 	return (
-		<group {...props} dispose={null}>
-			<mesh castShadow receiveShadow geometry={nodes.ring_6_s.geometry} material={materials['RING.006']} />
-			<mesh castShadow receiveShadow geometry={nodes.ring_5_s.geometry} material={materials['RING.006']} />
-			<mesh castShadow receiveShadow geometry={nodes.ring_3_s.geometry} material={materials.RINGS} />
-			<mesh castShadow receiveShadow geometry={nodes.ring_4_s.geometry} material={materials['RINGS.002']} />
-			<mesh castShadow receiveShadow geometry={nodes.ring_2_s.geometry} material={materials['RINGS.001']} />
+		<group {...props} dispose={null} scale-y={5}>
+			<mesh geometry={nodes.ring_6_s.geometry} material={materials['RING.006']}>
+				<a.meshBasicMaterial {...materials['RING.006']} opacity={activeTileOpacity} />
+				{/* <meshBasicMaterial attach='material' transparent opacity={1} alphaMap={alphaMap} color={col} /> */}
+				{/* <meshStandardMaterial attach='material' transparent opacity={1} emissiveMap={alphaMap} color={col} premultipliedAlpha={false} /> */}
+				{/* <meshStandardMaterial transparent alpha={true} opacity={3} emissive={col} emissiveIntensity={2} color={col} toneMapped={false}></meshStandardMaterial> */}
+				{/* <meshBasicMaterial attach='material' transparent alpha={true} opacity={3} emissive={col} emissiveIntensity={2} color={col} toneMapped={false}></meshBasicMaterial> */}
+			</mesh>
+			<mesh castShadow receiveShadow geometry={nodes.ring_5_s.geometry}>
+				<a.meshBasicMaterial {...materials['RING.006']} opacity={activeTileOpacity} />
+			</mesh>
+			<mesh castShadow receiveShadow geometry={nodes.ring_3_s.geometry}>
+				<a.meshBasicMaterial {...materials.RINGS} opacity={activeTileOpacity} />
+			</mesh>
+			<mesh castShadow receiveShadow geometry={nodes.ring_4_s.geometry}>
+				<a.meshBasicMaterial {...materials['RINGS.002']} opacity={activeTileOpacity} />
+			</mesh>
+			<mesh castShadow receiveShadow geometry={nodes.ring_2_s.geometry}>
+				<a.meshBasicMaterial {...materials['RINGS.001']} opacity={activeTileOpacity} />
+			</mesh>
 		</group>
+	)
+}
+function UniverseSampleNew(props) {
+	const [ringInstanceRef, ringRef] = useRefs()
+
+	const getUniverseStores = appState(state => state.getUniverseStores)
+	const { colorValues } = getUniverseStores()
+
+	let col = new THREE.Color(...colorValues[1])
+
+	let sampleAmount = 10000
+	return (
+		<>
+			<group rotation={[1.55, 0, 0]} scale-z={0.4} position-y={0.0005}>
+				<Sampler count={sampleAmount} mesh={ringRef} instances={ringInstanceRef} transform={transformInstancesRandom} />
+				<instancedMesh args={[null, null, sampleAmount]} ref={ringInstanceRef}>
+					<sphereGeometry args={[0.00015, 1, 1]} />
+					<a.meshStandardMaterial transparent alpha={true} opacity={1} emissive={col} emissiveIntensity={5} color={col} toneMapped={false}></a.meshStandardMaterial>
+				</instancedMesh>
+				{/* <mesh geometry={randomNodes[ringName + '-r'].geometry} ref={ringRef}>
+				<meshPhysicalMaterial transparent {...config} />
+			</mesh> */}
+				<Torus position={[0, 0, 0]} args={[0.695, 0.025, 10, 100]} ref={ringRef}>
+					<meshStandardMaterial transparent alpha={true} opacity={0} emissive={col} emissiveIntensity={10} color={col} toneMapped={false}></meshStandardMaterial>
+				</Torus>
+				{/* <meshBasicMaterial attach='material' transparent opacity={1} alphaMap={alphaMap} color={col} /> */}
+				{/* <meshStandardMaterial attach='material' transparent opacity={1} emissiveMap={alphaMap} color={col} premultipliedAlpha={false} /> */}
+				{/* <meshStandardMaterial transparent alpha={true} opacity={3} emissive={col} emissiveIntensity={2} color={col} toneMapped={false}></meshStandardMaterial> */}
+				{/* <meshBasicMaterial attach='material' transparent alpha={true} opacity={3} emissive={col} emissiveIntensity={2} color={col} toneMapped={false}></meshBasicMaterial> */}
+			</group>
+		</>
 	)
 }
 

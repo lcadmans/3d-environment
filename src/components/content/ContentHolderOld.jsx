@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 
-import { Tile, TilePlane, TileHtml, TilePlaneHtml } from './'
+import { Tile, TilePlane, TileHtml } from './'
 import * as THREE from 'three'
 import { Sphere, Bounds, useBounds } from '@react-three/drei'
 import { appState } from '../../store'
@@ -36,6 +36,7 @@ export const ContentHolder = props => {
 
 		if (!activeTile) subGroup.current.rotation.y += 0.0005
 		else subGroup.current.rotation.y = subGroup.current.rotation.y
+		// group.current.lookAt(camera.position)
 	})
 
 	function randomIntFromInterval(min, max) {
@@ -111,7 +112,7 @@ function SectionTileHolder({ content, position, visible }) {
 			// if (!group.current) return
 			if (!activeTile) masterGroup.current.rotation.y += 0.001
 			const lookAt = new THREE.Vector3(camera.position.x, camera.position.y + 0.1, camera.position.z)
-			contentRef.current.lookAt(lookAt)
+			// contentRef.current.lookAt(lookAt)
 		})
 
 		const [groupPosition, setGroupPosition] = useState({ x: randomIntFromInterval(-0.125, 0.125), y: randomIntFromInterval(-0.125, 0.125), z: randomIntFromInterval(-0.125, 0.125) })
@@ -131,7 +132,7 @@ function SectionTileHolder({ content, position, visible }) {
 				<group ref={masterGroup}>
 					<animated.mesh visible={currentView == 'page'} key={'tile - ' + index} position={contentPosition}>
 						<group ref={contentRef} position={[0, 0.3, 0]}>
-							<TilePlaneHtml id={Title} planeArgs={[...ratios[randomCount - 1], 5, 5]} imageSrc={images[0]} title={Title} subtitle={Subtitle} description={Description} cta={CTA} activeCameraPosition={activeCameraPosition} visible={visible} />
+							<TileHtml id={Title} planeArgs={[...ratios[randomCount - 1], 5, 5]} imageSrc={images[0]} title={Title} subtitle={Subtitle} description={Description} cta={CTA} activeCameraPosition={activeCameraPosition} visible={visible} />
 						</group>
 					</animated.mesh>
 				</group>

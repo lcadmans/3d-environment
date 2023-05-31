@@ -122,7 +122,7 @@ function Page(props) {
 
 	useFrame(({ camera }) => {
 		// if (!groupRef.current) return
-		page1Ref.current.lookAt(camera.position)
+		// page1Ref.current.lookAt(camera.position)
 	})
 
 	return (

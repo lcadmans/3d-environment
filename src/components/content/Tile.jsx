@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { Object3D } from 'three'
-import shallow from 'zustand/shallow'
+import { shallow } from 'zustand/shallow'
 import React, { useRef, Suspense, useEffect } from 'react'
 import { Canvas, extend, useFrame, useLoader } from '@react-three/fiber'
 import { shaderMaterial } from '@react-three/drei'
@@ -40,9 +40,9 @@ export const Tile = props => {
 	const groupRef = useRef()
 
 	// let _imageSrc = imageSrc || '1.jpg'
+	// console.log(imageSrc)
 
-	// let _imageSrc = imageSrc || '1.jpg'
-	let _imageSrc = '1.jpg'
+	// _imageSrc = '1.jpg'
 
 	useFrame(state => {
 		const { clock, camera } = state
@@ -85,7 +85,18 @@ export const Tile = props => {
 		// console.log(activeTile)
 	}, [activeTile])
 
-	const [image] = useLoader(THREE.TextureLoader, ['./images/' + _imageSrc])
+	// console.log(_imageSrc)
+
+	// let _imageSrc
+	// _imageSrc = imageSrc[0]
+
+	// console.log(imageSrc)
+	console.log(imageSrc[0])
+
+	let imageString = `./images/${imageSrc[0]}`
+	console.log(imageString)
+
+	const [image] = useLoader(THREE.TextureLoader, [imageString])
 
 	// console.log(ratios[1])
 

@@ -9,7 +9,7 @@ varying vec2 vUv;
 varying float vWave;
 
 void main() {
-  float wave = -tan(vWave * 0.8)*2.0;
+  float wave = -tan(vWave * 0.8)*1.0;
   vec3 texture = texture2D(uTexture, vUv + wave).rgb;
   // float luma = -tan(vWave * 0.8)*4.0;
   gl_FragColor = vec4(texture, uOpacity); 

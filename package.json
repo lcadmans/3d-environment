@@ -15,8 +15,8 @@
 	"dependencies": {
 		"@gsimone/suzanne": "^0.0.12",
 		"@react-spring/three": "^9.7.2",
-		"@react-three/drei": "^9.56.18",
-		"@react-three/fiber": "^8.11.0",
+		"@react-three/drei": "^9.70.0",
+		"@react-three/fiber": "^8.13.0",
 		"@react-three/postprocessing": "^2.7.1",
 		"@types/three": "^0.149.0",
 		"@use-gesture/react": "^10.2.26",
