@@ -137,6 +137,7 @@ function App() {
 			{/* <FocusPanel></FocusPanel> */}
 			{/* <DragPanel></DragPanel> */}
 			{/* {activeRing != 'none' ? <ContentOverlay /> : <></>} */}
+			{activeRing != 'none' ? <ContentOverlayv2 /> : <></>}
 			{/* <CustomLoader /> */}
 			{/* <Loader /> */}
 			<ConsoleLogger />
@@ -157,7 +158,7 @@ function App() {
 			>
 				<PerspectiveCamera
 					ref={cameraRef}
-					// manual={true}
+					// manual={false}
 					aspect={aspects[0] / aspects[1]}
 					fov={cameraFov}
 					// position={Object.values(cameraPositions[0].position)}
@@ -179,7 +180,16 @@ function App() {
 					// smoothTime={smoothTime}
 					camera={cameraRef.current}
 				/> */}
-				<OrbitControls makeDefault minPolarAngle={0} maxPolarAngle={Math.PI / 1.75} ref={orbitControlsRef} />
+				<OrbitControls
+					// camera={cameraRef.current}
+					makeDefault
+					minPolarAngle={0.5}
+					maxPolarAngle={Math.PI / 2.5}
+					ref={orbitControlsRef}
+					onChange={() => console.log('change')}
+					onStart={() => console.log('start')}
+					onEnd={() => console.log('end')}
+				/>
 				{/* <Suspense fallback={null}> */}
 				<Environment files='./environment/nedula.hdr' background={true} blur={0.1} rotation={5} />
 				<Lights />
@@ -189,8 +199,8 @@ function App() {
 				<hemisphereLight color='white' groundColor='#ff0f00' position={[-7, 25, 13]} intensity={1} />
 
 				<Environment files='./environment/nedula_bright.hdr' blur={0.1}></Environment>
-				<Bounds damping={3} margin={4}>
-					<Scene></Scene>
+				<Bounds damping={5} margin={1.5}>
+					<Scene cameraRef={cameraRef} orbitControlsRef={orbitControlsRef}></Scene>
 				</Bounds>
 				<EffectComposer>
 					<Bloom
@@ -229,7 +239,8 @@ const _Scene = props => {
 	return <></>
 }
 
-function Scene() {
+function Scene(props) {
+	const { cameraRef, orbitControlsRef } = props
 	const [floatGroup, hirecoUniverseRef] = useRefs()
 	const currentView = appState(state => state.currentView, shallow)
 	const activeRing = appState(state => state.activeRing, shallow)
@@ -254,6 +265,7 @@ function Scene() {
 		const { camera } = state
 		const t = state.clock.getElapsedTime()
 		floatGroup.current.rotation.set(Math.cos(t / 8) / 8, Math.sin(t / 8) / 16, -0.2 - Math.sin(t / 3) / 30)
+		// if (orbitControlsRef) console.log(orbitControlsRef.current)
 	})
 
 	const getUniverseStores = appState(state => state.getUniverseStores)
@@ -273,20 +285,6 @@ function Scene() {
 			// bounds.to({ position: [x, y, z], target: [0, 0, 0] })
 			setInitialLoad(true)
 		}
-		// bounds.refresh(focusElementRef.current)
-		// bounds.fit()
-		// bounds.clip()
-		// if (currentView == 'page' && !activeTile) {
-		// 	let [endPositionX, endPositionY, endPositionZ] = [cameraPositionsStore.focus[activeRing].position.x, cameraPositionsStore.focus[activeRing].position.y, cameraPositionsStore.focus[activeRing].position.z]
-		// 	let { x: endTargetX, y: endTargetY, z: endTargetZ } = sectionPositions[activeRing]
-		// 	// bounds.refresh()
-		// 	// bounds.fit()
-		// 	// bounds.clip()
-		// 	bounds.to({ position: [endPositionX, endPositionY, endPositionZ], target: [endTargetX, endTargetY, endTargetZ] })
-		// }
-		// if (currentView == 'page' && activeTile) {
-		// 	// bounds.to({ position: [0, 0, 0], target: [0, 0, 0] })
-		// }
 	}, [])
 
 	useEffect(() => {
@@ -298,11 +296,27 @@ function Scene() {
 		}
 	}, [currentView])
 
+	function forceLeft() {
+		console.log('forceLeft')
+		let [endPositionX, endPositionY, endPositionZ] = [cameraRef.current.position.x, cameraRef.current.position.y, cameraRef.current.position.z]
+		let [endTargetX, endTargetY, endTargetZ] = [orbitControlsRef.current.target.x, orbitControlsRef.current.target.y, orbitControlsRef.current.target.z]
+		bounds.to({ position: [endPositionX, endPositionY, endPositionZ], target: [endTargetX, endTargetY, endTargetZ] })
+	}
+
 	useEffect(() => {
 		if (!focusElementRef) return
+		// console.log(cameraRef.current)
+		// orbitControlsRef.current.target.x = 10
 		bounds.refresh(focusElementRef.current)
 		bounds.fit()
-		bounds.clip()
+		asyncCall(10).then(() => {
+			forceLeft()
+		})
+		// console.log(orbitControlsRef.current)
+		// cameraRef.current.position.x = 2
+		// bounds.to({ target: [50, 1, 50] })
+
+		// bounds.clip()
 	}, [focusElementRef])
 
 	return (
@@ -318,6 +332,47 @@ function Scene() {
 export default App
 
 function ContentOverlay(props) {
+	const { returnCameraToOrigin } = props
+
+	const setActiveRing = appState(state => state.setActiveRing)
+	const setCurrentView = appState(state => state.setCurrentView)
+	const setActiveTile = appState(state => state.setActiveTile)
+	const activeRing = appState(state => state.activeRing, shallow)
+	const ringNames = appState(state => state.ringNames)
+	const currentView = appState(state => state.currentView, shallow)
+	const updateBounds = appState(state => state.updateBounds, shallow)
+
+	return (
+		<div className={`wrap absolute z-40 h-screen  items-center pl-10 pr-10 grad-left flex  w-1/3 `}>
+			<div className='content text-white '>
+				<div
+					className='back pb-6 pointer-events-auto cursor-pointer'
+					onClick={() => {
+						setActiveRing('none')
+						setCurrentView('main')
+						setActiveTile(null)
+						let [endPositionX, endPositionY, endPositionZ] = [cameraPositionsStore.focus['none'].position.x, cameraPositionsStore.focus['none'].position.y, cameraPositionsStore.focus['none'].position.z]
+						updateBounds({ position: { xPos: endPositionX, yPos: endPositionY, zPos: endPositionZ }, target: { xTar: 0, yTar: 0, zTar: 0 } })
+						// setScrollControlsInitiated(false)
+					}}
+				>
+					<span className='uppercase font-bold tracking-wider'>Back</span>
+				</div>
+				{currentView == 'page' ? (
+					<>
+						<div className=''>
+							<GenerateContent />
+						</div>
+					</>
+				) : (
+					<></>
+				)}
+			</div>
+		</div>
+	)
+}
+
+function ContentOverlayv2(props) {
 	const { returnCameraToOrigin } = props
 
 	const setActiveRing = appState(state => state.setActiveRing)
