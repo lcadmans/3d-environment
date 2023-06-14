@@ -7,9 +7,14 @@ import App from './App'
 import './styles/global.css'
 import '/fonts/Eveleth Clean Thin.otf'
 import '/fonts/Eveleth Clean Regular.otf'
+import { QueryClientProvider, QueryClient } from '@tanstack/react-query'
+
+const queryClient = new QueryClient()
 
 ReactDOM.createRoot(document.getElementById('root')).render(
 	<React.StrictMode>
-		<App />
+		<QueryClientProvider client={queryClient}>
+			<App />
+		</QueryClientProvider>
 	</React.StrictMode>
 )

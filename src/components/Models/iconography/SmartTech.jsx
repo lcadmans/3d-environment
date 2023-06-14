@@ -7,7 +7,7 @@ import { useGLTF, useAnimations } from '@react-three/drei'
 
 export function SmartTechSection(props) {
 	const group = useRef()
-	const { nodes, materials, animations } = useGLTF('./models/iconography/INCONOGRAPHY_smartTech_v3.glb')
+	const { nodes, materials, animations } = useGLTF('./models/iconography/INCONOGRAPHY_smartTech_v4.glb')
 	const { actions } = useAnimations(animations, group)
 
 	useEffect(() => {
@@ -41,4 +41,4 @@ export function SmartTechSection(props) {
 	)
 }
 
-useGLTF.preload('./models/iconography/INCONOGRAPHY_smartTech_v3.glb')
+useGLTF.preload('./models/iconography/INCONOGRAPHY_smartTech_v4.glb')

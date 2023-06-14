@@ -63,6 +63,12 @@ export function SetsModel(props) {
 
 	const currentView = appState(state => state.currentView)
 
+	const getUniverseStores = appState(state => state.getUniverseStores)
+
+	const { colorValues } = getUniverseStores()
+
+	let col = new THREE.Color(...colorValues[3])
+
 	const [baseScale, setBaseScale] = useState(fetchScale(index))
 
 	const [active, setActive] = useState(false)
@@ -71,7 +77,7 @@ export function SetsModel(props) {
 	const group = useRef()
 
 	useFrame(state => {
-		group.current.rotation.y += 0.0033
+		group.current.rotation.y += 0.015
 		// console.log(first)
 		const t = state.clock.getElapsedTime()
 		// console.log(1 + Math.sin(t))
@@ -122,12 +128,13 @@ export function SetsModel(props) {
 			// onClick={() => setActive(!active)}
 			// onPointerLeave={(document.body.style.cursor = 'cursor')}
 			onPointerEnter={() => {}}
+			position={[0, 0.75, 0]}
 		>
-			<Sphere scale={0.7}>
+			<Sphere scale={0.5}>
 				<meshStandardMaterial color='black' transparent opacity={0.1} side={THREE.BackSide} />
 			</Sphere>
-			{/* <Sphere scale={0.7}>
-				<meshStandardMaterial color='white' wireframe transparent opacity={0.005} />
+			{/* <Sphere scale={0.5}>
+				<meshStandardMaterial color={col} wireframe transparent opacity={0.005} blending={THREE.NormalBlending} />
 			</Sphere> */}
 			{renderSwitch(nodeName, index)}
 		</group>

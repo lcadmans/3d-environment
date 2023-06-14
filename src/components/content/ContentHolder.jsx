@@ -1,76 +1,90 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { shallow } from 'zustand/shallow'
 
 import { Tile, TilePlane, TileHtml, TilePlaneHtml } from './'
 import * as THREE from 'three'
-import { Sphere, Bounds, useBounds } from '@react-three/drei'
+import { Sphere, Bounds, useBounds, Plane, Line } from '@react-three/drei'
 import { appState } from '../../store'
 import { animated, a, update, useSpring, config } from '@react-spring/three'
 import { useFrame } from '@react-three/fiber'
 
+import { Arrow } from '../Models'
+
 import { cameraPositionsStore } from '../../data'
 
 export const ContentHolder = props => {
-	const [points, setPoints] = useState([])
-
-	const { sectionName } = props
-
 	const group = useRef()
 	const subGroup = useRef()
 
-	const activeRing = appState(state => state.activeRing)
+	const activeRing = appState(state => state.activeRing, shallow)
 	const getUniverseStores = appState(state => state.getUniverseStores)
 	const currentView = appState(state => state.currentView)
-	const sectionContent = appState(state => state.sectionContent)
-	const allContent = appState(state => state.allContent)
-
-	const activeTile = appState(state => state.activeTile)
+	const fetchData = appState(state => state.fetchData, shallow)
+	const updateBounds = appState(state => state.updateBounds, shallow)
 	const setActiveTile = appState(state => state.setActiveTile)
+	const setCurrentView = appState(state => state.setCurrentView)
+	const setActiveRing = appState(state => state.setActiveTile)
 
-	// const content = sectionContent(sectionName)
-	const content = allContent
+	const allContent = fetchData
 
 	const { sectionPositions } = getUniverseStores()
 
-	useFrame(({ camera }) => {
-		if (!group.current) return
-		// console.log(activeTile)
-		// if (!activeTile) subGroup.current.rotation.y += 0.0005
-		// else subGroup.current.rotation.y = subGroup.current.rotation.y
-	})
-
-	function randomIntFromInterval(min, max) {
-		let random = Math.random() * (max - min) + min
-		// console.log('before = ' + random)
-		if (random < 0.075 && random > -0.075) random = random * 1.5
-		// console.log('after = ' + random)
-		return random
-	}
+	useEffect(() => {
+		// console.log('fetchData')
+		// console.log(fetchData)
+	}, [fetchData])
 
 	const [sections, setSections] = useState(['Experts', 'Source', 'Support', 'Technology', 'Welfare'])
 
 	return (
 		<>
 			<animated.mesh visible={currentView == 'page'} ref={group}>
+				{/* <Plane position={[0, 10, 0]}>
+					<meshStandardMaterial color='hotpink' />
+				</Plane> */}
 				{sections.map((a, index) => {
 					let ringIndex = index + 2
 					let ringName = 'ring_' + ringIndex
 
 					const position = sectionPositions[ringName]
-					const content = allContent.filter(b => b['Category'] == a)
+					const content = allContent.filter(b => b['section'] == a)
 
-					// console.log(position)
+					const randomAmounts = { ring_2: 2, ring_3: 5, ring_4: 5, ring_5: 10, ring_6: 10 }
+					const randomAmount = randomAmounts[ringName]
 
-					// console.log(content)
+					// console.log(randomAmount)
 
-					// console.log(activeRing)
-					// console.log(ringName)
+					const randomPositionArray = useMemo(() => {
+						const array = []
+						for (let i = 0; i < content.length; i++) {
+							array.push({ x: randomIntFromInterval(-randomAmount, randomAmount), y: randomIntFromInterval(-randomAmount, randomAmount), z: randomIntFromInterval(-randomAmount, randomAmount) })
+						}
+						return array
+					}, [])
 
 					return (
-						<group position={position} key={'sectionGroup' + index} visible={activeRing === ringName}>
-							<group ref={subGroup}>
-								<SectionTileHolder visible={activeRing === ringName} content={content} />
+						<>
+							<group
+								position={position}
+								scale={1.5}
+								onClick={() => {
+									setActiveRing('none')
+									setCurrentView('main')
+									setActiveTile(null)
+									// let [endPositionX, endPositionY, endPositionZ] = [cameraPositionsStore.focus['none'].position.x, cameraPositionsStore.focus['none'].position.y, cameraPositionsStore.focus['none'].position.z]
+									let [endPositionX, endPositionY, endPositionZ] = [-75, 105, 324]
+									updateBounds({ position: { xPos: endPositionX, yPos: endPositionY, zPos: endPositionZ }, target: { xTar: 0, yTar: 0, zTar: 0 } })
+									// setScrollControlsInitiated(false)
+								}}
+							>
+								{/* <Arrow /> */}
 							</group>
-						</group>
+							<group position={position} key={'sectionGroup' + index} visible={activeRing === ringName}>
+								<group ref={subGroup} position={[0, { ring_2: 1.5, ring_3: 4, ring_3: 6, ring_4: 10, ring_5: 15, ring_6: 20 }[activeRing], 0]}>
+									<SectionTileHolder visible={activeRing === ringName} content={content} randomPositionArray={randomPositionArray} />
+								</group>
+							</group>
+						</>
 					)
 				})}
 			</animated.mesh>
@@ -78,7 +92,8 @@ export const ContentHolder = props => {
 	)
 }
 
-function SectionTileHolder({ content, position, visible }) {
+function SectionTileHolder(props) {
+	const { content, position, visible, randomPositionArray } = props
 	const activeRing = appState(state => state.activeRing)
 	const ringNames = appState(state => state.ringNames)
 	const currentView = appState(state => state.currentView)
@@ -91,48 +106,52 @@ function SectionTileHolder({ content, position, visible }) {
 	if (!content) return
 
 	return content.map((a, index) => {
-		const { Title, Subtitle, Description, CTA } = a
-		let images
-		images = a['Image/Videos'].split(',')
-		if (images[0].length < 1) images = ['1.jpg']
+		const { title, subtitle, description, image, id } = a
+
+		let CTA = ''
 		const contentRef = useRef()
+
+		const [groupPosition, setGroupPosition] = useState(randomPositionArray[index])
+
+		const linePoints = []
+		const [thisPosition, setThisPosition] = useState(new THREE.Vector3(randomPositionArray[index].x, randomPositionArray[index].y, randomPositionArray[index].z))
+		const [nextPosition, setNextPosition] = useState(randomPositionArray[index + 1] ? new THREE.Vector3(randomPositionArray[index + 1].x, randomPositionArray[index + 1].y, randomPositionArray[index + 1].z) : new THREE.Vector3(0, 0, 0))
+
+		linePoints.push(thisPosition)
+		linePoints.push(nextPosition)
 
 		let randomCount = Math.floor(Math.random() * (2 - 1 + 1) + 1)
 		let ratios = [
-			[0.07, 0.04],
-			[0.04, 0.09]
+			[7, 4],
+			[4, 9]
 		]
-
-		const tileName = sectionName + '_' + index
 
 		const masterGroup = useRef()
 
 		useFrame(({ camera }) => {
-			// if (!group.current) return
-			// if (!activeTile) masterGroup.current.rotation.y += 0.001
-			const lookAt = new THREE.Vector3(camera.position.x, camera.position.y + 0.1, camera.position.z)
+			const lookAt = new THREE.Vector3(camera.position.x, camera.position.y, camera.position.z)
 			contentRef.current.lookAt(lookAt)
 		})
-
-		const [groupPosition, setGroupPosition] = useState({ x: randomIntFromInterval(-0.125, 0.125), y: randomIntFromInterval(-0.125, 0.125), z: randomIntFromInterval(-0.125, 0.125) })
 
 		const { contentPosition } = useSpring({
 			contentPosition: currentView == 'page' ? [groupPosition.x, groupPosition.y, groupPosition.z] : [0, 0, 0],
 			config: config.gentle
 		})
 
-		// console.log(x)
-
 		return (
 			<>
 				{/* <Sphere args={[0.01, 10, 10]} key={'sphere - ' + index}>
 					<meshNormalMaterial />
 				</Sphere> */}
+				{/* <group position={contentPosition}> */}
+				{/* </group> */}
 				<group ref={masterGroup}>
 					<animated.mesh visible={currentView == 'page'} key={'tile - ' + index} position={contentPosition}>
-						<group ref={contentRef} position={[0, 0.2, 0]}>
+						<group position={[0, 2, 0]}>{/* <Line points={linePoints} color={'white'} lineWidth={1} dashed={false} /> */}</group>
+
+						<group ref={contentRef} position={[0, 2, 0]}>
 							{/* <TilePlaneHtml id={Title} planeArgs={[...ratios[randomCount - 1], 5, 5]} imageSrc={images[0]} title={Title} subtitle={Subtitle} description={Description} cta={CTA} activeCameraPosition={activeCameraPosition} visible={visible} /> */}
-							<TilePlane id={Title} planeArgs={[...ratios[randomCount - 1], 5, 5]} imageSrc={images[0]} title={Title} subtitle={Subtitle} description={Description} cta={CTA} activeCameraPosition={activeCameraPosition} visible={visible} />
+							<TilePlane id={id} planeArgs={[...ratios[randomCount - 1], 5, 5]} imageSrc={image} title={title} subtitle={subtitle} description={description} cta={CTA} activeCameraPosition={activeCameraPosition} visible={visible} linePoints={linePoints} />
 						</group>
 					</animated.mesh>
 				</group>
