@@ -3,7 +3,7 @@ import { Object3D } from 'three'
 import { shallow } from 'zustand/shallow'
 import React, { useRef, Suspense, useEffect } from 'react'
 import { Canvas, extend, useFrame, useLoader } from '@react-three/fiber'
-import { shaderMaterial } from '@react-three/drei'
+import { shaderMaterial, Plane } from '@react-three/drei'
 import { animated, a, update, useSpring, config } from '@react-spring/three'
 
 import { appState } from '../../store'
@@ -55,7 +55,7 @@ export const TilePlane = props => {
 
 	useEffect(() => {
 		if (activeTile == id) {
-			setFocusElementRef(meshRef)
+			setFocusElementRef(groupRef)
 			// camera.position.set(...Object.values(middlePoint))
 			// meshRef.current.scale.x = 2
 			// meshRef.current.scale.y = 2
@@ -107,31 +107,6 @@ export const TilePlane = props => {
 	// console.log(adjustedPath)
 	const [image] = useLoader(THREE.TextureLoader, [adjustedPath])
 
-	// console.log(ratios[1])
-
-	// let middlePoint = new THREE.Vector3()
-	// middlePoint.lerpVectors(_sectionPosition, _activeCameraPosition, 1)
-
-	// if (meshRef.current) meshRef.current.getWorldPosition(dir)
-	// console.log(dir)
-	// if (meshRef.current) dir.subVectors(_activeCameraPosition, meshRef.current.getWorldPosition(dir)).normalize()
-
-	// console.log(dir)
-
-	// console.log(middlePoint)
-
-	// let basePoint =
-	// if (meshRef.current) vec3 = meshRef.current.position
-	// else vec3 = new THREE.Vector3(0, 0, 0)
-	// console.log(vec3)
-	// let _activeCameraPosition = new THREE.Vector3(Object.values(activeCameraPosition))
-	// // console.log('_activeCameraPosition')
-	// // console.log(_activeCameraPosition)
-
-	// function getActiveGroupPosition() {
-	// 	return [0, 0, 0.1]
-	// }
-
 	const { activeScale, groupScale, activeOpacity } = useSpring({
 		// groupPosition: activeTile === id ? getActiveGroupPosition() : [0, 0, 0],
 		activeScale: activeTile === id ? 1.5 : 1,
@@ -154,28 +129,8 @@ export const TilePlane = props => {
 
 	return (
 		<animated.mesh scale={groupScale}>
-			{/* <animated.mesh position={groupPosition} scale={activeScale}> */}
 			<animated.mesh scale={activeScale}>
 				<group ref={groupRef}>
-					{/* <mesh
-				position={[0, 0.2, 0]}
-				ref={meshRef}
-				onClick={() => {
-					console.log('tileClick')
-					setActiveTile(id)
-				}}
-				onPointerOver={() => {
-					document.body.style.cursor = 'pointer'
-				}}
-				onPointerOut={() => {
-					document.body.style.cursor = 'default'
-				}}
-				depthTest={false}
-				renderOrder={10}
-			>
-				<planeBufferGeometry args={planeArgs} />
-				<waveShaderMaterial uColor={'hotpink'} ref={ref} uTexture={image} side={THREE.DoubleSide} />
-			</mesh> */}
 					<mesh
 						// position={[0, 0, 0]}
 						ref={meshRef}
@@ -193,9 +148,15 @@ export const TilePlane = props => {
 						depthTest={false}
 						renderOrder={10}
 					>
-						<planeGeometry attach='geometry' args={[0.1, 0.1]} />
+						<planeGeometry attach='geometry' args={[0.075, 0.075]} />
 						<a.meshBasicMaterial attach='material' map={image} transparent opacity={activeOpacity} />
 					</mesh>
+					{/* <Plane args={[0.105, 0.105]}>
+						<meshStandardMaterial transparent opacity={0.1} />
+					</Plane> */}
+					<Plane args={[0.05, 0.05]} position-x={0.3}>
+						<meshStandardMaterial transparent opacity={0} alpha={true} depthTest={false} />
+					</Plane>
 				</group>
 			</animated.mesh>
 		</animated.mesh>

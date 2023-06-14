@@ -33,9 +33,9 @@ export const ContentHolder = props => {
 
 	useFrame(({ camera }) => {
 		if (!group.current) return
-
-		if (!activeTile) subGroup.current.rotation.y += 0.0005
-		else subGroup.current.rotation.y = subGroup.current.rotation.y
+		// console.log(activeTile)
+		// if (!activeTile) subGroup.current.rotation.y += 0.0005
+		// else subGroup.current.rotation.y = subGroup.current.rotation.y
 	})
 
 	function randomIntFromInterval(min, max) {
@@ -109,7 +109,7 @@ function SectionTileHolder({ content, position, visible }) {
 
 		useFrame(({ camera }) => {
 			// if (!group.current) return
-			if (!activeTile) masterGroup.current.rotation.y += 0.001
+			// if (!activeTile) masterGroup.current.rotation.y += 0.001
 			const lookAt = new THREE.Vector3(camera.position.x, camera.position.y + 0.1, camera.position.z)
 			contentRef.current.lookAt(lookAt)
 		})
@@ -130,8 +130,9 @@ function SectionTileHolder({ content, position, visible }) {
 				</Sphere> */}
 				<group ref={masterGroup}>
 					<animated.mesh visible={currentView == 'page'} key={'tile - ' + index} position={contentPosition}>
-						<group ref={contentRef} position={[0, 0.3, 0]}>
-							<TilePlaneHtml id={Title} planeArgs={[...ratios[randomCount - 1], 5, 5]} imageSrc={images[0]} title={Title} subtitle={Subtitle} description={Description} cta={CTA} activeCameraPosition={activeCameraPosition} visible={visible} />
+						<group ref={contentRef} position={[0, 0.2, 0]}>
+							{/* <TilePlaneHtml id={Title} planeArgs={[...ratios[randomCount - 1], 5, 5]} imageSrc={images[0]} title={Title} subtitle={Subtitle} description={Description} cta={CTA} activeCameraPosition={activeCameraPosition} visible={visible} /> */}
+							<TilePlane id={Title} planeArgs={[...ratios[randomCount - 1], 5, 5]} imageSrc={images[0]} title={Title} subtitle={Subtitle} description={Description} cta={CTA} activeCameraPosition={activeCameraPosition} visible={visible} />
 						</group>
 					</animated.mesh>
 				</group>

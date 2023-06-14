@@ -153,10 +153,10 @@ function GenerateContent(props) {
 	}
 	return (
 		<>
-			<div className='max-w-[10px] pointer-events-none leading-[1px] '>
+			<div className='max-w-[50px] pointer-events-none leading-[1px] text-white '>
 				<h1 className={'text-[1px] text-[#d19a41] font-[600]'}>{title}</h1>
 				<h2 className={'text-[0.5px]'}>{subTitle}</h2>
-				<p className={'text-[0.3px] leading-[0.2px]'}>{description}</p>
+				<p className={'text-[1px] leading-tight'}>{description}</p>
 			</div>
 		</>
 	)

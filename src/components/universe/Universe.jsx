@@ -339,7 +339,7 @@ function TextSections(props) {
 	useFrame(({ camera }) => {
 		// if (!textContentRef.current) return
 		// textContentRef.current.quaternion.copy(camera.quaternion)
-		// textContentRef.current.lookAt(camera.position)
+		textContentRef.current.lookAt(camera.position)
 	})
 
 	function fetchScale(index) {
@@ -474,7 +474,9 @@ function TextSections(props) {
 }
 
 function UniverseGradient(props) {
-	const { nodes, materials } = useGLTF('./models/universe/universe_gradient.glb')
+	const { nodes, materials } = useGLTF('./models/universe/universe_gradient_v3.glb')
+	console.log('nodes')
+	console.log(nodes)
 
 	const getUniverseStores = appState(state => state.getUniverseStores)
 	const activeTile = appState(state => state.activeTile)
@@ -501,30 +503,63 @@ function UniverseGradient(props) {
 		config: config.gentle
 	})
 
+	console.log(nodes)
 	return (
 		<group {...props} dispose={null} scale-y={5}>
-			<mesh geometry={nodes.ring_6_s.geometry} material={materials['RING.006']}>
-				<a.meshBasicMaterial {...materials['RING.006']} opacity={activeTileOpacity} />
-				{/* <meshBasicMaterial attach='material' transparent opacity={1} alphaMap={alphaMap} color={col} /> */}
-				{/* <meshStandardMaterial attach='material' transparent opacity={1} emissiveMap={alphaMap} color={col} premultipliedAlpha={false} /> */}
-				{/* <meshStandardMaterial transparent alpha={true} opacity={3} emissive={col} emissiveIntensity={2} color={col} toneMapped={false}></meshStandardMaterial> */}
-				{/* <meshBasicMaterial attach='material' transparent alpha={true} opacity={3} emissive={col} emissiveIntensity={2} color={col} toneMapped={false}></meshBasicMaterial> */}
+			<mesh castShadow receiveShadow geometry={nodes.ring_1.geometry} material={materials['Hireco - HCircle- 1.001']}>
+				<a.meshBasicMaterial {...materials['Hireco - HCircle- 1.001']} opacity={activeTileOpacity} />
 			</mesh>
-			<mesh castShadow receiveShadow geometry={nodes.ring_5_s.geometry}>
+			<mesh castShadow receiveShadow geometry={nodes.hirecoH_2.geometry} material={materials['Hireco - HCircle- 1.003']}>
+				<a.meshBasicMaterial {...materials['Hireco - HCircle- 1.003']} opacity={activeTileOpacity} />
+			</mesh>
+			<mesh castShadow receiveShadow geometry={nodes.hirecoH_1.geometry} material={materials['Hireco - HCircle- 1.002']}>
+				<a.meshBasicMaterial {...materials['Hireco - HCircle- 1.002']} opacity={activeTileOpacity} />
+			</mesh>
+			<mesh castShadow receiveShadow geometry={nodes.ring_6.geometry} material={materials['RING.006']}>
 				<a.meshBasicMaterial {...materials['RING.006']} opacity={activeTileOpacity} />
 			</mesh>
-			<mesh castShadow receiveShadow geometry={nodes.ring_3_s.geometry}>
+			<mesh castShadow receiveShadow geometry={nodes.ring_5.geometry} material={materials['RING.006']}>
+				<a.meshBasicMaterial {...materials['RING.006']} opacity={activeTileOpacity} />
+			</mesh>
+			<mesh castShadow receiveShadow geometry={nodes.ring_3.geometry} material={materials.RINGS}>
 				<a.meshBasicMaterial {...materials.RINGS} opacity={activeTileOpacity} />
 			</mesh>
-			<mesh castShadow receiveShadow geometry={nodes.ring_4_s.geometry}>
+			<mesh castShadow receiveShadow geometry={nodes.ring_4.geometry} material={materials['RINGS.002']}>
 				<a.meshBasicMaterial {...materials['RINGS.002']} opacity={activeTileOpacity} />
 			</mesh>
-			<mesh castShadow receiveShadow geometry={nodes.ring_2_s.geometry}>
+			<mesh castShadow receiveShadow geometry={nodes.ring_2.geometry} material={materials['RINGS.001']}>
 				<a.meshBasicMaterial {...materials['RINGS.001']} opacity={activeTileOpacity} />
 			</mesh>
 		</group>
 	)
 }
+
+function dump() {
+	return (
+		<>
+			<mesh geometry={nodes.ring_6.geometry} material={materials['RING.006']}>
+				{/* <a.meshBasicMaterial {...materials['RING.006']} opacity={activeTileOpacity} /> */}
+				{/* <meshBasicMaterial attach='material' transparent opacity={1} alphaMap={alphaMap} color={col} /> */}
+				{/* <meshStandardMaterial attach='material' transparent opacity={1} emissiveMap={alphaMap} color={col} premultipliedAlpha={false} /> */}
+				{/* <meshStandardMaterial transparent alpha={true} opacity={3} emissive={col} emissiveIntensity={2} color={col} toneMapped={false}></meshStandardMaterial> */}
+				{/* <meshBasicMaterial attach='material' transparent alpha={true} opacity={3} emissive={col} emissiveIntensity={2} color={col} toneMapped={false}></meshBasicMaterial> */}
+			</mesh>
+			<mesh castShadow receiveShadow geometry={nodes.ring_5.geometry}>
+				{/* <a.meshBasicMaterial {...materials['RING.006']} opacity={activeTileOpacity} /> */}
+			</mesh>
+			<mesh castShadow receiveShadow geometry={nodes.ring_3.geometry}>
+				{/* <a.meshBasicMaterial {...materials['RING.006']} opacity={activeTileOpacity} /> */}
+			</mesh>
+			<mesh castShadow receiveShadow geometry={nodes.ring_4.geometry}>
+				{/* <a.meshBasicMaterial {...materials.RINGS} opacity={activeTileOpacity} /> */}
+			</mesh>
+			<mesh castShadow receiveShadow geometry={nodes.ring_2.geometry}>
+				{/* <a.meshBasicMaterial {...materials['RINGS.001']} opacity={activeTileOpacity} /> */}
+			</mesh>
+		</>
+	)
+}
+
 function UniverseSampleNew(props) {
 	const [ringInstanceRef, ringRef] = useRefs()
 
@@ -557,7 +592,7 @@ function UniverseSampleNew(props) {
 	)
 }
 
-useGLTF.preload('./models/universe/universe_gradient.glb')
+useGLTF.preload('./models/universe/universe_gradient_v3.glb')
 useGLTF.preload('./models/hireco_3DScene_v16.glb')
 useGLTF.preload('./models/universe/hireco_3DScene_ringR-v1-forGLTF.glb')
 // useGLTF.preload('./models/hireco_3DScene_beveled-v4.glb')
